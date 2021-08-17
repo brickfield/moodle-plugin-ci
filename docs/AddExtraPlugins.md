@@ -26,6 +26,19 @@ install:
   - moodle-plugin-ci install
 ```
 
+If you need to add a plugin contained within a private repo, you can use a [Github encrypted secret](https://docs.github.com/en/actions/reference/encrypted-secrets).
+In the example below, the secret is named 'REPO_TOKEN'. The value of the secret should be a [Personal access token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+that has access to the repository you are adding.
+NOTE - This is a security risk, as the PAT will be sent to moodle-plugin-ci. The PAT could be captured at this point, and allow
+unwanted users any access the PAT grants. Storing the secret makes it less visible, but it could still be captured in the transfer
+or in the moodle-plugin-ci script. For this reason, you will probably want to use your own fork of the plugin-ci script.
+
+```yaml
+install:
+  - moodle-plugin-ci add-plugin --branch main --token "${{ secrets.REPO_TOKEN }}" username/project
+  - moodle-plugin-ci install
+```
+
 If you are not using GitHub and want to provide your own Git clone URL, then you can use the `--clone` (`-c`) option.
 Here is an example (Note, you can use the `--branch` option together with the `--clone` option if you need to):
 
