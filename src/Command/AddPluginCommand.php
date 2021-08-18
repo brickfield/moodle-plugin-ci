@@ -74,7 +74,8 @@ class AddPluginCommand extends Command
         }
         if (!empty($project)) {
             /** @psalm-suppress PossiblyInvalidArgument */
-            $cloneUrl = sprintf('https://%s@github.com/%s.git', $token, $project);
+            $token = ($token !== null) ? $token . '@' : '';
+            $cloneUrl = sprintf('https://%sgithub.com/%s.git', $token, $project);
         } elseif (!empty($clone)) {
             $cloneUrl = $clone;
         } else {
