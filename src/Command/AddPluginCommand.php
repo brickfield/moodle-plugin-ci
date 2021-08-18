@@ -66,7 +66,8 @@ class AddPluginCommand extends Command
             throw new \InvalidArgumentException('Cannot use both the project argument and the --clone option');
         }
         if (!empty($project)) {
-            $cloneUrl = sprintf('https://%s@github.com/%s.git', $token, $project);
+            $token = ($token !== null) ? $token . '@' : '';
+            $cloneUrl = sprintf('https://%sgithub.com/%s.git', $token, $project);
         } elseif (!empty($clone)) {
             $cloneUrl = $clone;
         } else {
