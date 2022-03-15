@@ -9,7 +9,31 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 The format of this change log follows the advice given at [Keep a CHANGELOG](http://keepachangelog.com).
 
 ## [Unreleased]
-No unreleased changes.
+### Changed
+- ACTION SUGGESTED: Now, it's safe to 'unpin' the MariaDB version in all integrations. With MariaDB 10.6.7 and 10.7.3 already released, the existing problems are gone, so it's possible to move away from the older 10.5 version. To achieve that, just look for any use of `image: mariadb:10.5` and change it to `image: mariadb:10`. For more information, see [MDL-72131](https://tracker.moodle.org/browse/MDL-72131).
+
+## [3.2.4] - 2022-01-17
+### Changed
+- Updated version of [moodle-local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) to v3.0.6.
+
+## [3.2.3] - 2022-01-12
+### Changed
+- Updated version of [moodle-local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) to v3.0.5.
+
+### Fixed
+- Avoid publishing the selenium container port, not needed for `host` networking.
+
+## [3.2.2] - 2021-12-16
+### Added
+- Support for subplugins in the extra-plugins directory for install.
+- Support for [`coverage.php`](https://docs.moodle.org/dev/Writing_PHPUnit_tests#Check_your_coverage) files added. Previous coverage defaults only will be applied when that file is not present in the plugin.
+
+### Changed
+- Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) and [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) versions.
+- Updated version of [moodle-local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) to v3.0.4.
+- Both Chrome and Firefox are back to use latest Selenium 3 versions, previously pinned because of some interim problems with them.
+- GitHub [no longer supports the git:// protocol](https://github.blog/2021-09-01-improving-git-protocol-security-github/). Please change any use to `https://` instead.
+- Internal, various improvements to self testing.
 
 ## [3.2.1] - 2021-07-30
 ### Changed
@@ -79,7 +103,7 @@ No unreleased changes.
 
 ### Changed
 - `moodle-plugin-ci phpunit` when coverage report is included, phpdbg is called with ignore memory limits param
-  to avoid memory exhaused errors.
+  to avoid memory exhausted errors.
 - Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) and [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) versions.
 - Updated version of [moodle-local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) to v3.0.0.
 - Install grunt locally and use `npx grunt` to run it instead of installing it globally.
@@ -369,7 +393,10 @@ No unreleased changes.
 - `moodle-plugin-ci shifter` command.  Run YUI Shifter on plugin YUI modules.
 - `moodle-plugin-ci csslint` command.  Lints the CSS files in the plugin.
 
-[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.1...master
+[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.4...master
+[3.2.4]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.3...3.2.4
+[3.2.3]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.2...3.2.3
+[3.2.2]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.1...3.2.2
 [3.2.1]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.0.8...3.1.0

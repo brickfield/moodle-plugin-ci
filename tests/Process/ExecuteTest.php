@@ -19,7 +19,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class ExecuteTest extends \PHPUnit_Framework_TestCase
+class ExecuteTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp()
     {
@@ -130,7 +130,7 @@ class ExecuteTest extends \PHPUnit_Framework_TestCase
         /** @var Process[] $processes */
         $processes = [
             new Process('php -r "echo 42;"'),
-            new Process('php -r "syntax error"'),
+            new Process('php -r "syntax wrong_code_error_ignore_me"'), // This may appear in logs, ignore it!
             new Process('php -r "echo 42;"'),
         ];
 

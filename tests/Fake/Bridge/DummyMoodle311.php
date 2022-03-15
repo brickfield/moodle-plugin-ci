@@ -1,5 +1,6 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+
+// This file is part of the Moodle Plugin CI package.
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,23 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Plugin upgrade file
- *
- * @package   local_ci
- * @copyright Copyright (c) 2017 Blackboard Inc. (http://www.blackboard.com)
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace MoodlePluginCI\Tests\Fake\Bridge;
 
 /**
- * Execute local_ci upgrade from the given old version.
+ * Dummy Moodle Fixture class to verify stuff like it's a plugin running for Moodle 3.11.
  *
- * @param int $oldversion
- * @return bool
+ * @copyright  2021 onwards Eloy Lafuente (stronk7) {@link https://stronk7.com}
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-function xmldb_local_ci_upgrade($oldversion) {
-    if ($oldversion < 2011033101) {
-        upgrade_plugin_savepoint(true, 2011033101, 'local', 'travis');
-    }
-    return true;
+class DummyMoodle311 extends DummyMoodle
+{
+    public $branch = 311;
 }

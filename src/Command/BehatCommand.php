@@ -38,14 +38,14 @@ class BehatCommand extends AbstractMoodleCommand
      *
      * @var string
      */
-    private $seleniumFirefoxImage = 'selenium/standalone-firefox:3.141.59';
+    private $seleniumFirefoxImage = 'selenium/standalone-firefox:3';
 
     /**
      * Selenium standalone Chrome image.
      *
      * @var string
      */
-    private $seleniumChromeImage = 'selenium/standalone-chrome:3.141.59-20210713';
+    private $seleniumChromeImage = 'selenium/standalone-chrome:3';
 
     /**
      * Wait this many microseconds for Selenium server to start/stop.
@@ -138,7 +138,7 @@ class BehatCommand extends AbstractMoodleCommand
         } else {
             $image = $this->seleniumFirefoxImage;
         }
-        $cmd   = sprintf('docker run -d --rm -p 127.0.0.1:4444:4444 --name=selenium --net=host --shm-size=2g -v %s:%s %s',
+        $cmd   = sprintf('docker run -d --rm --name=selenium --net=host --shm-size=2g -v %s:%s %s',
             $this->moodle->directory, $this->moodle->directory, $image);
         $docker = $this->execute->passThrough($cmd);
         if (!$docker->isSuccessful()) {

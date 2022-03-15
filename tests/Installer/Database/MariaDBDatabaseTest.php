@@ -14,7 +14,7 @@ namespace MoodlePluginCI\Tests\Installer\Database;
 
 use MoodlePluginCI\Installer\Database\MariaDBDatabase;
 
-class MariaDBDatabaseTest extends \PHPUnit_Framework_TestCase
+class MariaDBDatabaseTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetCreateDatabaseCommand()
     {
@@ -24,7 +24,7 @@ class MariaDBDatabaseTest extends \PHPUnit_Framework_TestCase
         $database->pass = 'TestPass';
         $database->host = 'TestHost';
 
-        $expected = 'mysql -u \'TestUser\' --password=\'TestPass\' -h \'TestHost\' -e \'CREATE DATABASE `TestName` DEFAULT CHARACTER SET UTF8 COLLATE utf8_general_ci;\'';
+        $expected = 'mysql -u \'TestUser\' --password=\'TestPass\' -h \'TestHost\' -e \'CREATE DATABASE `TestName` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\'';
         $this->assertSame($expected, $database->getCreateDatabaseCommand());
     }
 }
