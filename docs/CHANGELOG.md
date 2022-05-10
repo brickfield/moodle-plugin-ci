@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 The format of this change log follows the advice given at [Keep a CHANGELOG](http://keepachangelog.com).
 
 ## [Unreleased]
+
+## [3.2.6] - 2022-05-10
 ### Changed
 - It is possible to specify more test execution options to the 'phpunit' command, such as "--fail-on-warning"
 
