@@ -79,6 +79,8 @@ jobs:
     - php: 7.4
       env: MOODLE_BRANCH=MOODLE_400_STABLE
     - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_401_STABLE
+    - php: 7.4
       env: MOODLE_BRANCH=MOODLE_400_STABLE
     - php: 7.4
       env: MOODLE_BRANCH=MOODLE_311_STABLE
