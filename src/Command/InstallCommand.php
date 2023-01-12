@@ -166,7 +166,7 @@ class InstallCommand extends Command
 
         if ($input->getOption('lms') == 'Moodle') {
             $factory = new InstallerFactory();
-        } else if ($input->getOption('lms') == 'Moodle') {
+        } else if ($input->getOption('lms') == 'Totara') {
             $factory = new TotaraInstallerFactory();
         } else {
             return null;
