@@ -166,7 +166,8 @@ class InstallCommand extends Command
         }
 
         $factory = new InstallerFactory();
-        $factory->moodle = new Moodle($input->getOption('moodle'));
+        $factory->lms        = $input->getOption('lms');
+        $factory->moodle     = new Moodle($input->getOption('moodle'));
         $factory->plugin     = new MoodlePlugin($pluginDir);
         $factory->execute    = $this->execute;
         $factory->repo       = $validate->gitUrl($input->getOption('repo'));
