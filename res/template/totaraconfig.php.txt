@@ -1,0 +1,58 @@
+<?php // Moodle configuration file
+
+// Totara configuration file
+
+$CFG->dbtype    = '{{DBTYPE}}';
+$CFG->dblibrary = '{{DBLIBRARY}}';
+$CFG->dbhost    = '{{DBHOST}}';
+$CFG->dbname    = '{{DBNAME}}';
+$CFG->dbuser    = '{{DBUSER}}';
+$CFG->dbpass    = '{{DBPASS}}';
+$CFG->prefix    = 'ttr_';
+$CFG->dboptions = [
+    'dbpersist' => 0,
+    'dbport' => '{{DBPORT}}',
+    'dbsocket' => '',
+    'dbcollation' => 'utf8_unicode_ci',
+];
+
+$CFG->wwwroot  = '{{WWWROOT}}';
+$CFG->dataroot = '{{DATAROOT}}';
+$CFG->admin    = 'admin';
+
+$CFG->directorypermissions = 02777;
+
+$CFG->sitetype = 'development';
+
+// Show debugging messages.
+$CFG->debug        = (E_ALL | E_STRICT);
+$CFG->debugdisplay = 1;
+
+// No emails.
+$CFG->noemailever    = true;
+$CFG->noreplyaddress = 'noreply@localhost.local';
+
+// PHPUnit settings.
+$CFG->phpunit_dataroot = '{{PHPUNITDATAROOT}}';
+$CFG->phpunit_prefix = 'p_';
+$CFG->phpunit_dboptions = array_merge($CFG->dboptions, array(
+    'dbschema' => 'phpunit'
+));
+
+// Behat settings.
+$CFG->behat_prefix        = 'behat_';
+$CFG->behat_dataroot      = '{{BEHATDATAROOT}}';
+$CFG->behat_wwwroot       = '{{BEHATWWWROOT}}';
+$CFG->behat_faildump_path = '{{BEHATDUMP}}';
+$CFG->behat_profiles      = [
+    'default' => [
+        'browser' => 'firefox',
+        'wd_host' => '{{BEHATWDHOST}}',
+    ],
+    'chrome' => [
+        'browser' => 'chrome',
+        'wd_host' => '{{BEHATWDHOST}}',
+    ],
+];
+
+{{EXTRACONFIG}}
