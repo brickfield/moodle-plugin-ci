@@ -13,6 +13,7 @@
 namespace MoodlePluginCI\Command;
 
 use MoodlePluginCI\Bridge\Moodle;
+use MoodlePluginCI\Bridge\Totara;
 use MoodlePluginCI\Bridge\MoodlePlugin;
 use MoodlePluginCI\Installer\ConfigDumper;
 use MoodlePluginCI\Installer\Database\DatabaseResolver;
