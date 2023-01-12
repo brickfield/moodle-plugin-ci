@@ -68,6 +68,7 @@ class InstallCommand extends Command
     protected function configure()
     {
         // Travis CI configures some things by environment variables, default to those if available.
+        $lms    = getenv('LMS') !== false ? getenv('LMS') : 'Moodle';
         $type   = getenv('DB') !== false ? getenv('DB') : null;
         $token  = getenv('REPO_TOKEN') !== false ? getenv('REPO_TOKEN') . '@' : '';
         $repo   = getenv('MOODLE_REPO') !== false ? getenv('MOODLE_REPO') : 'https://github.com/moodle/moodle.git';
@@ -86,6 +87,7 @@ class InstallCommand extends Command
 
         $this->setName('install')
             ->setDescription('Install everything required for CI testing')
+            ->addOption('lms', null, InputOption::VALUE_REQUIRED, 'LMS to use', $lms)
             ->addOption('moodle', null, InputOption::VALUE_REQUIRED, 'Clone Moodle to this directory', 'moodle')
             ->addOption('data', null, InputOption::VALUE_REQUIRED, 'Directory create for Moodle data files', 'moodledata')
             ->addOption('repo', null, InputOption::VALUE_REQUIRED, 'Moodle repository to clone', $repo)
@@ -162,7 +164,8 @@ class InstallCommand extends Command
         }
 
         $factory             = new InstallerFactory();
-        $factory->moodle     = new Moodle($input->getOption('moodle'));
+        $lmsClass            = $input->getOption('lms');
+        $factory->moodle     = new $lmsClass($input->getOption('moodle'));
         $factory->plugin     = new MoodlePlugin($pluginDir);
         $factory->execute    = $this->execute;
         $factory->repo       = $validate->gitUrl($input->getOption('repo'));
