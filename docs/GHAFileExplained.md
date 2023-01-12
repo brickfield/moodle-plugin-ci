@@ -26,12 +26,12 @@ jobs:
   # when a job name is not provided
   test:
     # Virtual environment to use.
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     # DB services you need for testing.
     services:
       postgres:
-        image: postgres:10
+        image: postgres:13
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -54,7 +54,8 @@ jobs:
     # another branch, total number of builds will become 12.
     # If you need to use PHP 7.0 and run phpunit coverage test, make sure you are
     # using ubuntu-16.04 virtual environment in this case to have phpdbg or
-    # this version in the system.
+    # this version in the system. See the "Setup PHP" step below for more details
+    # about PHPUnit code coverage.
     strategy:
       fail-fast: false
       matrix:
@@ -83,7 +84,7 @@ jobs:
     steps:
       # Check out this repository code in ./plugin directory
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: plugin
 
@@ -94,6 +95,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: ${{ matrix.extensions }}
           ini-values: max_input_vars=5000
+          # none to use phpdbg fallback. Specify pcov (Moodle 3.10 and up) or xdebug to use them instead.
           coverage: none
 
       # Install this project into a directory called "ci", updating PATH and

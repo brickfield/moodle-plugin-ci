@@ -9,8 +9,71 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 The format of this change log follows the advice given at [Keep a CHANGELOG](http://keepachangelog.com).
 
 ## [Unreleased]
+
+## [3.4.3] - 2022-12-24
+### Changed
+- Updated [gha.dist.yml](https://github.com/moodlehq/moodle-plugin-ci/blob/master/gha.dist.yml) and
+  [.travis.dist.yml](https://github.com/moodlehq/moodle-plugin-ci/blob/master/.travis.dist.yml)
+  (and documentation) to fulfil [Moodle 4.2 new requirements](https://tracker.moodle.org/browse/MDL-74905).
+- ACTION REQUIRED: Review existing integrations running tests against master (4.2dev). There are a few Moodle 4.2 new requirements:
+  - PHP 8.0 is required (instead of 7.4).
+  - PostgreSQL 13 is required (instead of 12).
+  - MariaDB 10.6 is required (instead of 10.4).
+  - MySQL 8 is required (instead of 5.7).
+
+## [3.4.2] - 2022-10-18
+### Changed
+- Internal improvements to the release process.
+- Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) and [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) versions.
+- Updated all uses of `actions/checkout` from `v2` (using node 12) to `v3` (using node 16), because [actions using node 12 are deprecated](https://github.blog/changelog/2022-09-22-github-actions-all-actions-will-begin-running-on-node16-instead-of-node12/) and will stop working in the future.
+* ACTION SUGGESTED: In order to avoid the node 12 deprecation warnings, update your workflows to use `actions/checkout@v3`.
+
+## [3.4.1] - 2022-09-21
+### Changed
+- Updated all GHA scripts, templates and guides to use Ubuntu 22.04 (jammy). This change is not required yet, but integrations using old versions (Ubuntu 16.04, 18.04...) may face problems in the future because they are being deprecated.
+- Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) and [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) versions.
+
+## [3.4.0] - 2022-07-27
+### Added
+- `moodle-plugin-ci install` now provides an option `--db-port` to define a custom database port.
+
+### Changed
+- Updated [gha.dist.yml](https://github.com/moodlehq/moodle-plugin-ci/blob/master/gha.dist.yml) and
+  [.travis.dist.yml](https://github.com/moodlehq/moodle-plugin-ci/blob/master/.travis.dist.yml)
+  (and documentation) to fulfil [Moodle 4.1 new requirements](https://tracker.moodle.org/browse/MDL-71747).
+- ACTION REQUIRED: Review existing integrations running tests against master (4.1dev). There are a few Moodle 4.1 new requirements:
+  - PHP 7.4 is required (instead of 7.3).
+  - PostgreSQL 12 is required (instead of 10). Pay special attention to the changes needed for this and Travis!
+  - MariaDB 10.4 is required (instead of 10.2.29).
+  - Oracle 19 is required (instead of 11.2).
+- Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) and [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) versions.
+
+## [3.3.0] - 2022-06-28
+### Added
+- PHPUnit code coverage will now automatically fallback between `pcov` => `xdebug` => `phpdbg`, using the "best" one available in the system. Still, if needed to, any of them can be forced, given all their requirements are fulfilled, using the following new options of the 'phpunit' command: `--coverage-pcov`, `--coverage-xdebug` or `--coverage-phpdbg`.
+- ACTION SUGGESTED: Ensure that the `pcov` or `xdebug` extensions are installed in your environment to get 'moodle-plugin-ci' using them automatically.
+
+### Changed
+- Switched from [local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) to [moodle-cs](https://github.com/moodlehq/moodle-cs) for checking the coding style. Previously, `moodle-plugin-ci` (and other tools) required `local_codechecker` (that includes both `PHP_Codesniffer` and the `moodle` standard) to verify the coding style. Now, the `moodle` standard has been moved to be a standalone repository and all the tools will be using it and installing `PHP_Codesniffer` via composer. No changes in behavior are expected.
+
+### Fixed
+- The `--version` option now works both with the `bin/moodle-plugin-ci` binary and the `moodle-plugin-ci.phar` package.
+
+## [3.2.6] - 2022-05-10
+### Added
+- It is possible to specify more test execution options to the 'phpunit' command, such as `--fail-on-incomplete`, `--fail-on-risky` and `--fail-on-skipped` and `--fail-on-warning`. For more information, see [PHPUnit documentation](https://phpunit.readthedocs.io).
+
+### Fixed
+- Locally bundled [moodle-local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) now works ok with recent (Moodle 3.11 and up) branches. A recent change in those versions was causing [some problems](https://tracker.moodle.org/browse/MDL-74704).
+
+## [3.2.5] - 2022-03-31
 ### Changed
 - ACTION SUGGESTED: Now, it's safe to 'unpin' the MariaDB version in all integrations. With MariaDB 10.6.7 and 10.7.3 already released, the existing problems are gone, so it's possible to move away from the older 10.5 version. To achieve that, just look for any use of `image: mariadb:10.5` and change it to `image: mariadb:10`. For more information, see [MDL-72131](https://tracker.moodle.org/browse/MDL-72131).
+- Updated version of [moodle-local_codechecker](https://github.com/moodlehq/moodle-local_codechecker) to v3.1.0. For list of changes see [changelog](https://github.com/moodlehq/moodle-local_codechecker/blob/master/CHANGES.md#changes-in-version-310-20220225---fondant-chocolate), you should expect numerous `@covers` annotation warnings in particular.
+
+### Added
+- Use utf8mb4 for MySQL and MariaDB setup.
+- ACTION SUGGESTED: If you are using GitHub Actions and running tests on MySQL/MariaDB, set env variables `MYSQL_CHARACTER_SET_SERVER` and `MYSQL_COLLATION_SERVER` for mysql/mariadb service per `gha.dist.yml` file.
 
 ## [3.2.4] - 2022-01-17
 ### Changed
@@ -393,7 +456,14 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - `moodle-plugin-ci shifter` command.  Run YUI Shifter on plugin YUI modules.
 - `moodle-plugin-ci csslint` command.  Lints the CSS files in the plugin.
 
-[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.4...master
+[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.3...master
+[3.4.3]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.2...3.4.3
+[3.4.2]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.1...3.4.2
+[3.4.1]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.0...3.4.1
+[3.4.0]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.3.0...3.4.0
+[3.3.0]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.6...3.3.0
+[3.2.6]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.5...3.2.6
+[3.2.5]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.4...3.2.5
 [3.2.4]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.3...3.2.4
 [3.2.3]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.2...3.2.3
 [3.2.2]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.2.1...3.2.2

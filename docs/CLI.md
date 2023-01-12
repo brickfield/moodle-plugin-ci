@@ -376,13 +376,13 @@ Do not ask any interactive question
 `codechecker`
 -------------
 
-Run Moodle Code Checker on a plugin
+Run Moodle CodeSniffer standard on a plugin
 
 ### Usage
 
 * `codechecker [-s|--standard STANDARD] [--max-warnings MAX-WARNINGS] [--] <plugin>`
 
-Run Moodle Code Checker on a plugin
+Run Moodle CodeSniffer standard on a plugin
 
 ### Arguments
 
@@ -813,7 +813,7 @@ Install everything required for CI testing
 
 ### Usage
 
-* `install [--moodle MOODLE] [--data DATA] [--repo REPO] [--branch BRANCH] [--plugin PLUGIN] [--db-type DB-TYPE] [--db-user DB-USER] [--db-pass DB-PASS] [--db-name DB-NAME] [--db-host DB-HOST] [--not-paths NOT-PATHS] [--not-names NOT-NAMES] [--extra-plugins EXTRA-PLUGINS] [--no-init] [--node-version NODE-VERSION]`
+* `install [--moodle MOODLE] [--data DATA] [--repo REPO] [--branch BRANCH] [--plugin PLUGIN] [--db-type DB-TYPE] [--db-user DB-USER] [--db-pass DB-PASS] [--db-name DB-NAME] [--db-host DB-HOST] [--db-port DB-PORT] [--not-paths NOT-PATHS] [--not-names NOT-NAMES] [--extra-plugins EXTRA-PLUGINS] [--no-init] [--node-version NODE-VERSION]`
 
 Install everything required for CI testing
 
@@ -908,6 +908,15 @@ Database host
 * Is value required: yes
 * Is multiple: no
 * Default: `'localhost'`
+
+#### `--db-port`
+
+Database port
+
+* Accept value: yes
+* Is value required: yes
+* Is multiple: no
+* Default: `''`
 
 #### `--not-paths`
 
@@ -1735,7 +1744,7 @@ Run PHPUnit on a plugin
 
 ### Usage
 
-* `phpunit [-m|--moodle MOODLE] [--coverage-text] [--coverage-clover] [--] <plugin>`
+* `phpunit [-m|--moodle MOODLE] [--coverage-text] [--coverage-clover] [--coverage-pcov] [--coverage-xdebug] [--coverage-phpdbg] [--fail-on-incomplete] [--fail-on-risky] [--fail-on-skipped] [--fail-on-warning] [--] <plugin>`
 
 Run PHPUnit on a plugin
 
@@ -1772,6 +1781,69 @@ Generate and print code coverage report in text format
 #### `--coverage-clover`
 
 Generate code coverage report in Clover XML format
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--coverage-pcov`
+
+Use the pcov extension to calculate code coverage
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--coverage-xdebug`
+
+Use the xdebug extension to calculate code coverage
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--coverage-phpdbg`
+
+Use the phpdbg binary to calculate code coverage
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--fail-on-incomplete`
+
+Treat incomplete tests as failures
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--fail-on-risky`
+
+Treat risky tests as failures
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--fail-on-skipped`
+
+Treat skipped tests as failures
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Default: `false`
+
+#### `--fail-on-warning`
+
+Treat tests with warnings as failures
 
 * Accept value: no
 * Is value required: no
