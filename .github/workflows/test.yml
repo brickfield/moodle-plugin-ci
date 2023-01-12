@@ -5,17 +5,19 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   selftest:
     name: CI test (make validate)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Check out repository code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Setup PHP 7.3
       uses: shivammathur/setup-php@v2
       with:
         php-version: 7.3
-        coverage: none
+        # We want to verify that xdebug works for coverage. Once we only support
+        # Moodle 3.10/PHPUnit 8 and up, we can switch our tests to pcov too.
+        coverage: xdebug
 
     - name: Initialise
       run: make init
@@ -24,13 +26,13 @@ jobs:
       run: make validate
 
   citest:
-    name: CI test
+    name: Integration tests
     needs: selftest
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       postgres:
-        image: postgres:10
+        image: postgres:13
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -43,8 +45,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - php: '7.4'
+          - php: '8.0'
             moodle-branch: 'master'
+          - php: '7.4'
+            moodle-branch: 'MOODLE_401_STABLE'
+          - php: '7.4'
+            moodle-branch: 'MOODLE_400_STABLE'
           - php: '7.4'
             moodle-branch: 'MOODLE_311_STABLE'
           - php: '7.4'
@@ -53,21 +59,20 @@ jobs:
             moodle-branch: 'MOODLE_39_STABLE'
           - php: '7.4'
             moodle-branch: 'MOODLE_38_STABLE'
-          - php: '7.2'
-            moodle-branch: 'MOODLE_35_STABLE'
-          - php: '7.0'
-            moodle-branch: 'MOODLE_35_STABLE'
 
     steps:
     - name: Check out repository code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Setup PHP ${{ matrix.php }}
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
         extensions: pgsql, zip, gd, xmlrpc, soap
-        coverage: none
+        ini-values: max_input_vars=5000
+        # We want to verify that xdebug works for coverage. Once we only support
+        # Moodle 3.10/PHPUnit 8 and up, we can switch our tests to pcov too.
+        coverage: xdebug
 
     - name: Initialise moodle-plugin-ci
       run: |
@@ -101,10 +106,8 @@ jobs:
         moodle-plugin-ci validate
         moodle-plugin-ci savepoints
         moodle-plugin-ci mustache
-        moodle-plugin-ci grunt ||  [ \
-            "$MOODLE_BRANCH" != 'master' -a \
-            "$MOODLE_BRANCH" != 'MOODLE_400_STABLE' ]
+        moodle-plugin-ci grunt || [ "$MOODLE_BRANCH" == 'MOODLE_38_STABLE' ]
         moodle-plugin-ci phpdoc
-        moodle-plugin-ci phpunit --verbose --coverage-text
+        moodle-plugin-ci phpunit --verbose --coverage-text --fail-on-warning
         moodle-plugin-ci behat --profile default
         moodle-plugin-ci behat --profile chrome
