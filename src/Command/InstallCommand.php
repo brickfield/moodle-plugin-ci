@@ -20,6 +20,7 @@ use MoodlePluginCI\Installer\EnvDumper;
 use MoodlePluginCI\Installer\Install;
 use MoodlePluginCI\Installer\InstallerCollection;
 use MoodlePluginCI\Installer\InstallerFactory;
+use MoodlePluginCI\Installer\TotaraInstallerFactory;
 use MoodlePluginCI\Installer\InstallOutput;
 use MoodlePluginCI\Validate;
 use Symfony\Component\Console\Command\Command;
@@ -163,7 +164,13 @@ class InstallCommand extends Command
             $pluginsDir = realpath($validate->directory($pluginsDir));
         }
 
-        $factory             = new InstallerFactory();
+        if ($input->getOption('lms') == 'Moodle') {
+            $factory = new InstallerFactory();
+        } else if ($input->getOption('lms') == 'Moodle') {
+            $factory = new TotaraInstallerFactory();
+        } else {
+            return null;
+        }
         $lmsClass            = $input->getOption('lms');
         $factory->moodle     = new $lmsClass($input->getOption('moodle'));
         $factory->plugin     = new MoodlePlugin($pluginDir);
