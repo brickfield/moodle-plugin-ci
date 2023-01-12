@@ -73,7 +73,8 @@ class InstallCommand extends Command
         $repo   = getenv('MOODLE_REPO') !== false ? getenv('MOODLE_REPO') : 'https://github.com/moodle/moodle.git';
         $repo   = str_replace('//github', '//' . $token . 'github', $repo);
         $branch = getenv('MOODLE_BRANCH') !== false ? getenv('MOODLE_BRANCH') : null;
-        $home   = getenv('HOME_DIR') !== false ? getenv('HOME_DIR') : 'moodle';
+        $main   = getenv('INSTALL_DIR') !== false ? getenv('INSTALL_DIR') : 'moodle';
+        $home   = getenv('HOME_DIR') !== false ? getenv('HOMR_DIR') : '';
         $data   = getenv('DATA_DIR') !== false ? getenv('DATA_DIR') : 'moodledata';
         $plugin = getenv('TRAVIS_BUILD_DIR') !== false ? getenv('TRAVIS_BUILD_DIR') : null;
         $paths  = getenv('IGNORE_PATHS') !== false ? getenv('IGNORE_PATHS') : null;
@@ -88,7 +89,8 @@ class InstallCommand extends Command
 
         $this->setName('install')
             ->setDescription('Install everything required for CI testing')
-            ->addOption('moodle', null, InputOption::VALUE_REQUIRED, 'Clone Moodle to this directory', $home)
+            ->addOption('moodle', null, InputOption::VALUE_REQUIRED, 'Clone Moodle to this directory', $main)
+            ->addOption('home', null, InputOption::VALUE_REQUIRED, 'Clone Moodle to this directory', $home)
             ->addOption('data', null, InputOption::VALUE_REQUIRED, 'Directory create for Moodle data files', $data)
             ->addOption('repo', null, InputOption::VALUE_REQUIRED, 'Moodle repository to clone', $repo)
             ->addOption('branch', null, InputOption::VALUE_REQUIRED, 'Moodle git branch to clone, EG: MOODLE_29_STABLE', $branch)
@@ -164,7 +166,7 @@ class InstallCommand extends Command
         }
 
         $factory             = new InstallerFactory();
-        $factory->moodle     = new Moodle($input->getOption('moodle'));
+        $factory->moodle     = new Moodle($input->getOption('moodle') . $input->getOption('home'));
         $factory->plugin     = new MoodlePlugin($pluginDir);
         $factory->execute    = $this->execute;
         $factory->repo       = $validate->gitUrl($input->getOption('repo'));
