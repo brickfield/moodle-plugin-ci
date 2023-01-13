@@ -112,6 +112,7 @@ class PluginInstaller extends AbstractInstaller
         $this->getOutput()->info(sprintf('Installing %s', $plugin->getComponent()));
 
         $directory = $this->moodle->getComponentInstallDirectory($plugin->getComponent());
+        $this->getOutput()->debug('Directory: ' . $directory);
 
         if (is_dir($directory)) {
             throw new \RuntimeException('Plugin is already installed in standard Moodle');
@@ -119,7 +120,6 @@ class PluginInstaller extends AbstractInstaller
 
         $this->getOutput()->info(sprintf('Copying plugin from %s to %s', $plugin->directory, $directory));
 
-        $this->getOutput()->debug('Directory: ' . $directory);
         // Install the plugin.
         $filesystem = new Filesystem();
         $filesystem->mirror($plugin->directory, $directory);
