@@ -99,9 +99,9 @@ class MoodleInstaller extends AbstractInstaller
             $this->execute->mustRun($process);
         }
 
-        $this->getOutput()->step('Totara assets');
+        $this->getOutput()->step('Moodle assets');
 
-        $this->getOutput()->debug('Creating Totara data directories');
+        $this->getOutput()->debug('Creating Moodle data directories');
 
         $dirs = [$this->dataDir, $this->dataDir.'/phpu_moodledata', $this->dataDir.'/behat_moodledata', $this->dataDir.'/behat_dump'];
 

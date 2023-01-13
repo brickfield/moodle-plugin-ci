@@ -119,7 +119,7 @@ class PluginInstaller extends AbstractInstaller
 
         $this->getOutput()->info(sprintf('Copying plugin from %s to %s', $plugin->directory, $directory));
 
-        echo $directory;
+        $this->getOutput()->debug('Directory: ' . $directory);
         // Install the plugin.
         $filesystem = new Filesystem();
         $filesystem->mirror($plugin->directory, $directory);

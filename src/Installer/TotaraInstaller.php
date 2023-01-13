@@ -100,9 +100,9 @@ class TotaraInstaller extends MoodleInstaller
             $this->execute->mustRun($process);
         }
 
-        $this->getOutput()->step('Moodle assets');
+        $this->getOutput()->step('Totara assets');
 
-        $this->getOutput()->debug('Creating Moodle data directories');
+        $this->getOutput()->debug('Creating Totara data directories');
 
         $dirs = [$this->dataDir, $this->dataDir.'/phpu_moodledata', $this->dataDir.'/behat_moodledata', $this->dataDir.'/behat_dump'];
 
@@ -110,10 +110,10 @@ class TotaraInstaller extends MoodleInstaller
         $filesystem->mkdir($dirs);
         $filesystem->chmod($dirs, 0777);
 
-        $this->getOutput()->debug('Create Moodle database');
+        $this->getOutput()->debug('Create Totara database');
         $this->execute->mustRun($this->database->getCreateDatabaseCommand());
 
-        $this->getOutput()->debug('Creating Moodle\'s config file');
+        $this->getOutput()->debug('Creating Totara\'s config file');
         $contents = $this->config->createContents($this->database, $this->expandPath($this->dataDir));
         $this->config->dump($this->moodle->directory.'/config.php', $contents);
 
