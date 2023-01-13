@@ -176,7 +176,6 @@ class InstallCommand extends Command
         }
 
         $factory->lms        = $input->getOption('lms');
-        $this->install->getOutput()->info('MoodlePlugin Directory: ' . $pluginDir);
         $factory->plugin     = new MoodlePlugin($pluginDir);
         $factory->execute    = $this->execute;
         $factory->repo       = $validate->gitUrl($input->getOption('repo'));

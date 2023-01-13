@@ -25,6 +25,7 @@ class Validate
     private function realPath($path)
     {
         $result = realpath($path);
+        throw new \InvalidArgumentException(sprintf('Plugin path(\'%s\')', $result));
         if ($result === false) {
             throw new \InvalidArgumentException(sprintf('Failed to run realpath(\'%s\')', $path));
         }
