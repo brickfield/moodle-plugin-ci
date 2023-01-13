@@ -13,11 +13,13 @@
 namespace MoodlePluginCI\Command;
 
 use MoodlePluginCI\Installer\EnvDumper;
+use MoodlePluginCI\Installer\InstallOutput;
 use MoodlePluginCI\Validate;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
@@ -56,6 +58,7 @@ class AddPluginCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
+        $output = new InstallOutput(new ConsoleLogger($output));
         $this->initializeExecute($output, $this->getHelper('process'));
     }
 
