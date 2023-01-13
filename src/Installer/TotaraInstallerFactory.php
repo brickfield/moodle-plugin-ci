@@ -21,7 +21,7 @@ use MoodlePluginCI\Process\Execute;
 /**
  * Installer Factory.
  */
-class TotaraInstallerFactory
+class TotaraInstallerFactory extends InstallerFactory
 {
     /**
      * @var Moodle

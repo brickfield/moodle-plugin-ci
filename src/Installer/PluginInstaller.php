@@ -68,6 +68,7 @@ class PluginInstaller extends AbstractInstaller
         $sorted = $plugins->sortByDependencies();
 
         foreach ($sorted->all() as $plugin) {
+
             $directory = $this->installPluginIntoMoodle($plugin);
 
             if ($plugin->getComponent() === $this->plugin->getComponent()) {

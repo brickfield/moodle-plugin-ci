@@ -18,7 +18,7 @@ use Symfony\Component\Filesystem\Filesystem;
 /**
  * Builds and interacts with the content of the Moodle config file.
  */
-class TotaraConfig
+class TotaraConfig extends MoodleConfig
 {
     const PLACEHOLDER = '// Extra config.';
 

@@ -165,7 +165,14 @@ class InstallCommand extends Command
             $pluginsDir = realpath($validate->directory($pluginsDir));
         }
 
-        $factory = new InstallerFactory();
+        if ($input->getOption('lms') == 'Moodle') {
+            $factory = new InstallerFactory();
+        } else if ($input->getOption('lms') == 'Moodle') {
+            $factory = new TotaraInstallerFactory();
+        } else {
+            return null;
+        }
+
         $factory->lms        = $input->getOption('lms');
         $factory->moodle     = new Moodle($input->getOption('moodle'));
         $factory->plugin     = new MoodlePlugin($pluginDir);

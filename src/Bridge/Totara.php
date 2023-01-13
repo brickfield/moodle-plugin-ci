@@ -19,7 +19,7 @@ use PhpParser\Node\Scalar\String_;
 /**
  * Bridge to Moodle.
  */
-class Totara
+class Totara extends Moodle
 {
     /**
      * Absolute path to Moodle directory.

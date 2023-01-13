@@ -24,7 +24,7 @@ use Symfony\Component\Process\Process;
 /**
  * Installer.
  */
-class TotaraInstaller extends AbstractInstaller
+class TotaraInstaller extends MoodleInstaller
 {
     /**
      * @var Execute
