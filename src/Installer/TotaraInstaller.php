@@ -83,7 +83,7 @@ class TotaraInstaller extends MoodleInstaller
 
     public function install()
     {
-        $this->getOutput()->step('Cloning Moodle');
+        $this->getOutput()->step('Cloning Totara');
 
         $process = new Process(sprintf('git clone --depth=1 --branch %s %s %s', $this->branch, $this->repo, $this->moodle->directory));
         $process->setTimeout(null);
