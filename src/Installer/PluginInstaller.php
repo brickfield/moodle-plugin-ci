@@ -50,13 +50,12 @@ class PluginInstaller extends AbstractInstaller
      * @param string       $extraPluginsDir
      * @param ConfigDumper $configDumper
      */
-    public function __construct(Moodle $moodle, MoodlePlugin $plugin, $extraPluginsDir, ConfigDumper $configDumper, string $lms)
+    public function __construct(Moodle $moodle, MoodlePlugin $plugin, $extraPluginsDir, ConfigDumper $configDumper)
     {
         $this->moodle          = $moodle;
         $this->plugin          = $plugin;
         $this->extraPluginsDir = $extraPluginsDir;
         $this->configDumper    = $configDumper;
-        $this->lms             = $lms;
     }
 
     public function install()
