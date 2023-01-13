@@ -1,0 +1,109 @@
+<?php
+
+/*
+ * This file is part of the Moodle Plugin CI package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * Copyright (c) 2018 Blackboard Inc. (http://www.blackboard.com)
+ * License http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace MoodlePluginCI\Bridge;
+
+use MoodlePluginCI\Installer\Database\AbstractDatabase;
+use Symfony\Component\Filesystem\Filesystem;
+
+/**
+ * Builds and interacts with the content of the Moodle config file.
+ */
+class TotaraConfig extends MoodleConfig
+{
+    const PLACEHOLDER = '// Extra config.';
+
+    /**
+     * Create a Moodle config.
+     *
+     * @param AbstractDatabase $database
+     * @param string           $dataDir  Absolute path to data directory
+     *
+     * @return string
+     */
+    public function createContents(AbstractDatabase $database, $dataDir)
+    {
+        $template  = file_get_contents(__DIR__.'/../../res/template/totaraconfig.php.txt');
+        $variables = [
+            '{{DBTYPE}}'          => $database->type,
+            '{{DBLIBRARY}}'       => $database->library,
+            '{{DBHOST}}'          => $database->host,
+            '{{DBPORT}}'          => $database->port,
+            '{{DBNAME}}'          => $database->name,
+            '{{DBUSER}}'          => $database->user,
+            '{{DBPASS}}'          => $database->pass,
+            '{{WWWROOT}}'         => 'http://localhost/totara/server',
+            '{{DATAROOT}}'        => $dataDir,
+            '{{PHPUNITDATAROOT}}' => $dataDir.'/phpu_totaradata',
+            '{{BEHATDATAROOT}}'   => $dataDir.'/behat_totaradata',
+            '{{BEHATDUMP}}'       => $dataDir.'/behat_dump',
+            '{{BEHATWWWROOT}}'    => getenv('MOODLE_BEHAT_WWWROOT') ?: 'http://localhost:8000',
+            '{{BEHATWDHOST}}'     => getenv('MOODLE_BEHAT_WDHOST') ?: 'http://localhost:4444/wd/hub',
+            '{{EXTRACONFIG}}'     => self::PLACEHOLDER,
+        ];
+
+        return str_replace(array_keys($variables), array_values($variables), $template);
+    }
+
+    /**
+     * Adds a line of PHP code into the config file.
+     *
+     * @param string $contents  The config file contents
+     * @param string $lineToAdd The line to inject
+     *
+     * @return string
+     */
+    public function injectLine($contents, $lineToAdd)
+    {
+        if (strpos($contents, self::PLACEHOLDER) === false) {
+            throw new \RuntimeException('Failed to find placeholder in config file, file might be malformed');
+        }
+
+        return str_replace(self::PLACEHOLDER, $lineToAdd."\n".self::PLACEHOLDER, $contents);
+    }
+
+    /**
+     * Read a config file.
+     *
+     * @param string $file Path to the file to read
+     *
+     * @return string
+     */
+    public function read($file)
+    {
+        if (!file_exists($file)) {
+            throw new \InvalidArgumentException('Failed to find Moodle config.php file, perhaps Moodle has not been installed yet');
+        }
+
+        // Must suppress as unreadable files emit PHP warning, but we handle it below.
+        $contents = @file_get_contents($file);
+
+        if ($contents === false) {
+            throw new \RuntimeException('Failed to read from the Moodle config.php file');
+        }
+
+        return $contents;
+    }
+
+    /**
+     * Write the config file contents out to the config file.
+     *
+     * @param string $file     File path
+     * @param string $contents Config file contents
+     */
+    public function dump($file, $contents)
+    {
+        $filesystem = new Filesystem();
+        $filesystem->dumpFile($file, $contents);
+        $filesystem->chmod($file, 0644);
+    }
+}

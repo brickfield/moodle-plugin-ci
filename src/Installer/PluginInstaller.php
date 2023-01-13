@@ -67,6 +67,7 @@ class PluginInstaller extends AbstractInstaller
         $sorted = $plugins->sortByDependencies();
 
         foreach ($sorted->all() as $plugin) {
+
             $directory = $this->installPluginIntoMoodle($plugin);
 
             if ($plugin->getComponent() === $this->plugin->getComponent()) {
@@ -111,6 +112,7 @@ class PluginInstaller extends AbstractInstaller
         $this->getOutput()->info(sprintf('Installing %s', $plugin->getComponent()));
 
         $directory = $this->moodle->getComponentInstallDirectory($plugin->getComponent());
+        $this->getOutput()->info('Directory: ' . $directory);
 
         if (is_dir($directory)) {
             throw new \RuntimeException('Plugin is already installed in standard Moodle');

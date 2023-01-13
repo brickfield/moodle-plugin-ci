@@ -13,6 +13,7 @@
 namespace MoodlePluginCI\Command;
 
 use MoodlePluginCI\Bridge\Moodle;
+use MoodlePluginCI\Bridge\Totara;
 use MoodlePluginCI\Bridge\MoodlePlugin;
 use MoodlePluginCI\Installer\ConfigDumper;
 use MoodlePluginCI\Installer\Database\DatabaseResolver;
@@ -20,6 +21,7 @@ use MoodlePluginCI\Installer\EnvDumper;
 use MoodlePluginCI\Installer\Install;
 use MoodlePluginCI\Installer\InstallerCollection;
 use MoodlePluginCI\Installer\InstallerFactory;
+use MoodlePluginCI\Installer\TotaraInstallerFactory;
 use MoodlePluginCI\Installer\InstallOutput;
 use MoodlePluginCI\Validate;
 use Symfony\Component\Console\Command\Command;
@@ -68,8 +70,11 @@ class InstallCommand extends Command
     protected function configure()
     {
         // Travis CI configures some things by environment variables, default to those if available.
+        $lms    = getenv('LMS') !== false ? getenv('LMS') : 'Moodle';
         $type   = getenv('DB') !== false ? getenv('DB') : null;
+        $token  = getenv('REPO_TOKEN') !== false ? getenv('REPO_TOKEN') . '@' : '';
         $repo   = getenv('MOODLE_REPO') !== false ? getenv('MOODLE_REPO') : 'https://github.com/moodle/moodle.git';
+        $repo   = str_replace('//github', '//' . $token . 'github', $repo);
         $branch = getenv('MOODLE_BRANCH') !== false ? getenv('MOODLE_BRANCH') : null;
         $plugin = getenv('TRAVIS_BUILD_DIR') !== false ? getenv('TRAVIS_BUILD_DIR') : null;
         $paths  = getenv('IGNORE_PATHS') !== false ? getenv('IGNORE_PATHS') : null;
@@ -84,6 +89,7 @@ class InstallCommand extends Command
 
         $this->setName('install')
             ->setDescription('Install everything required for CI testing')
+            ->addOption('lms', null, InputOption::VALUE_REQUIRED, 'LMS to use', $lms)
             ->addOption('moodle', null, InputOption::VALUE_REQUIRED, 'Clone Moodle to this directory', 'moodle')
             ->addOption('data', null, InputOption::VALUE_REQUIRED, 'Directory create for Moodle data files', 'moodledata')
             ->addOption('repo', null, InputOption::VALUE_REQUIRED, 'Moodle repository to clone', $repo)
@@ -159,8 +165,17 @@ class InstallCommand extends Command
             $pluginsDir = realpath($validate->directory($pluginsDir));
         }
 
-        $factory             = new InstallerFactory();
-        $factory->moodle     = new Moodle($input->getOption('moodle'));
+        if ($input->getOption('lms') == 'Moodle') {
+            $factory = new InstallerFactory();
+            $factory->moodle     = new Moodle($input->getOption('moodle'));
+        } else if ($input->getOption('lms') == 'Totara') {
+            $factory = new TotaraInstallerFactory();
+            $factory->moodle     = new Totara($input->getOption('moodle'));
+        } else {
+            return null;
+        }
+
+        $factory->lms        = $input->getOption('lms');
         $factory->plugin     = new MoodlePlugin($pluginDir);
         $factory->execute    = $this->execute;
         $factory->repo       = $validate->gitUrl($input->getOption('repo'));

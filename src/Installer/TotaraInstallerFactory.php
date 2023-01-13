@@ -13,7 +13,7 @@
 namespace MoodlePluginCI\Installer;
 
 use MoodlePluginCI\Bridge\Moodle;
-use MoodlePluginCI\Bridge\MoodleConfig;
+use MoodlePluginCI\Bridge\TotaraConfig;
 use MoodlePluginCI\Bridge\MoodlePlugin;
 use MoodlePluginCI\Installer\Database\AbstractDatabase;
 use MoodlePluginCI\Process\Execute;
@@ -21,7 +21,7 @@ use MoodlePluginCI\Process\Execute;
 /**
  * Installer Factory.
  */
-class InstallerFactory
+class TotaraInstallerFactory extends InstallerFactory
 {
     /**
      * @var Moodle
@@ -85,8 +85,8 @@ class InstallerFactory
      */
     public function addInstallers(InstallerCollection $installers)
     {
-        $installers->add(new MoodleInstaller($this->execute, $this->database, $this->moodle, new MoodleConfig(), $this->repo, $this->branch, $this->dataDir));
-        $installers->add(new PluginInstaller($this->moodle, $this->plugin, $this->pluginsDir, $this->dumper, $this->lms));
+        $installers->add(new TotaraInstaller($this->execute, $this->database, $this->moodle, new TotaraConfig(), $this->repo, $this->branch, $this->dataDir));
+        $installers->add(new PluginInstaller($this->moodle, $this->plugin, $this->pluginsDir, $this->dumper));
         $installers->add(new VendorInstaller($this->moodle, $this->plugin, $this->execute, $this->nodeVer));
 
         if ($this->noInit) {
