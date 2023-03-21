@@ -49,6 +49,7 @@ class AddPluginCommand extends Command
             ->setDescription('Queue up an additional plugin to be installed in the test site')
             ->addArgument('project', InputArgument::OPTIONAL, 'GitHub project, EG: moodlehq/moodle-local_hub, can\'t be used with --clone option')
             ->addOption('branch', 'b', InputOption::VALUE_REQUIRED, 'The branch to checkout in plugin repo (if non-default)', null)
+            ->addOption('token', 't', InputOption::VALUE_REQUIRED, 'The PAT to login to the plugin repo (if non-default)', null)
             ->addOption('clone', 'c', InputOption::VALUE_REQUIRED, 'Git clone URL, can\'t be used with --project option')
             ->addOption('storage', null, InputOption::VALUE_REQUIRED, 'Plugin storage directory', 'moodle-plugin-ci-plugins');
     }
@@ -66,13 +67,15 @@ class AddPluginCommand extends Command
         $branch     = $input->getOption('branch');
         $clone      = $input->getOption('clone');
         $storage    = $input->getOption('storage');
+        $token      = $input->getOption('token');
 
         if (!empty($project) && !empty($clone)) {
             throw new \InvalidArgumentException('Cannot use both the project argument and the --clone option');
         }
         if (!empty($project)) {
             /** @psalm-suppress PossiblyInvalidArgument */
-            $cloneUrl = sprintf('https://github.com/%s.git', $project);
+            $token = ($token !== null) ? $token . '@' : '';
+            $cloneUrl = sprintf('https://%sgithub.com/%s.git', $token, $project);
         } elseif (!empty($clone)) {
             $cloneUrl = $clone;
         } else {
