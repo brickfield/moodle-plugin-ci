@@ -93,11 +93,7 @@ jobs:
       env: MOODLE_BRANCH=MOODLE_401_STABLE
     - php: 8.0
       env: MOODLE_BRANCH=MOODLE_400_STABLE
-    - php: 7.4
-      env: MOODLE_BRANCH=MOODLE_401_STABLE
-    - php: 7.4
-      env: MOODLE_BRANCH=MOODLE_400_STABLE
-    - php: 7.4
+    - php: 8.0
       env: MOODLE_BRANCH=MOODLE_311_STABLE
     - php: 7.4
       env: MOODLE_BRANCH=MOODLE_310_STABLE
