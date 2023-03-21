@@ -25,40 +25,13 @@ use Symfony\Component\Process\Process;
  */
 class MoodleInstaller extends AbstractInstaller
 {
-    /**
-     * @var Execute
-     */
-    private $execute;
-
-    /**
-     * @var AbstractDatabase
-     */
-    private $database;
-
-    /**
-     * @var Moodle
-     */
-    private $moodle;
-
-    /**
-     * @var MoodleConfig
-     */
-    private $config;
-
-    /**
-     * @var string
-     */
-    private $repo;
-
-    /**
-     * @var string
-     */
-    private $branch;
-
-    /**
-     * @var string
-     */
-    private $dataDir;
+    private Execute $execute;
+    private AbstractDatabase $database;
+    private Moodle $moodle;
+    private MoodleConfig $config;
+    private string $repo;
+    private string $branch;
+    private string $dataDir;
 
     /**
      * @param Execute          $execute
@@ -69,7 +42,8 @@ class MoodleInstaller extends AbstractInstaller
      * @param string           $branch
      * @param string           $dataDir
      */
-    public function __construct(Execute $execute, AbstractDatabase $database, Moodle $moodle, MoodleConfig $config, $repo, $branch, $dataDir)
+    public function __construct(Execute $execute, AbstractDatabase $database, Moodle $moodle, MoodleConfig $config,
+        string $repo, string $branch, string $dataDir)
     {
         $this->execute  = $execute;
         $this->database = $database;
@@ -80,21 +54,29 @@ class MoodleInstaller extends AbstractInstaller
         $this->dataDir  = $dataDir;
     }
 
-    public function install()
+    public function install(): void
     {
         $this->getOutput()->step('Cloning Moodle');
 
-        $process = new Process(sprintf('git clone --depth=1 --branch %s %s %s', $this->branch, $this->repo, $this->moodle->directory));
-        $process->setTimeout(null);
-        $this->execute->mustRun($process);
+        $cmd = [
+            'git', 'clone',
+            '--depth=1',
+            '--branch', $this->branch,
+            $this->repo,
+            $this->moodle->directory,
+        ];
+
+        $this->execute->mustRun(new Process($cmd, null, null, null, null));
 
         // Expand the path to Moodle so all other installers use absolute path.
         $this->moodle->directory = $this->expandPath($this->moodle->directory);
 
         // If there are submodules, we clean up empty directories, since we
         // don't initialise them properly anyway.
-        if (is_file($this->moodle->directory.'/.gitmodules')) {
-            $process = new Process(sprintf('git config -f %s --get-regexp \'^submodule\..*\.path$\' | awk \'{ print $2 }\' | xargs -i rmdir "%s/{}"', $this->moodle->directory.'/.gitmodules', $this->moodle->directory));
+        if (is_file($this->moodle->directory . '/.gitmodules')) {
+            $process = Process::fromShellCommandline(sprintf('git config -f %s --get-regexp \'^submodule\..*\.path$\' ' .
+                '| awk \'{ print $2 }\' | xargs -i rmdir "%s/{}"',
+                $this->moodle->directory . '/.gitmodules', $this->moodle->directory));
             $process->setTimeout(null);
             $this->execute->mustRun($process);
         }
@@ -103,7 +85,7 @@ class MoodleInstaller extends AbstractInstaller
 
         $this->getOutput()->debug('Creating Moodle data directories');
 
-        $dirs = [$this->dataDir, $this->dataDir.'/phpu_moodledata', $this->dataDir.'/behat_moodledata', $this->dataDir.'/behat_dump'];
+        $dirs = [$this->dataDir, $this->dataDir . '/phpu_moodledata', $this->dataDir . '/behat_moodledata', $this->dataDir . '/behat_dump'];
 
         $filesystem = new Filesystem();
         $filesystem->mkdir($dirs);
@@ -114,14 +96,9 @@ class MoodleInstaller extends AbstractInstaller
 
         $this->getOutput()->debug('Creating Moodle\'s config file');
         $contents = $this->config->createContents($this->database, $this->expandPath($this->dataDir));
-        $this->config->dump($this->moodle->directory.'/config.php', $contents);
+        $this->config->dump($this->moodle->directory . '/config.php', $contents);
 
         $this->addEnv('MOODLE_DIR', $this->moodle->directory);
-
-        // If PHP 5.6, add an INI file to disable a setting that causes a deprecation notice.
-        if (PHP_MAJOR_VERSION === 5 && PHP_MINOR_VERSION === 6) {
-            $this->execute->mustRun(sprintf('phpenv config-add %s', realpath(__DIR__.'/../../res/template/moodle.ini')));
-        }
     }
 
     /**
@@ -131,14 +108,14 @@ class MoodleInstaller extends AbstractInstaller
      *
      * @return string
      */
-    public function expandPath($path)
+    public function expandPath(string $path): string
     {
         $validate = new Validate();
 
         return realpath($validate->directory($path));
     }
 
-    public function stepCount()
+    public function stepCount(): int
     {
         return 2;
     }

@@ -36,36 +36,21 @@ class InstallCommand extends Command
 {
     use ExecuteTrait;
 
-    /**
-     * @var Install
-     */
-    public $install;
-
-    /**
-     * @var InstallerCollection
-     */
-    public $installers;
-
-    /**
-     * @var InstallerFactory
-     */
-    public $factory;
-
-    /**
-     * @var string
-     */
-    private $envFile;
+    public Install $install;
+    public InstallerCollection $installers;
+    public InstallerFactory $factory;
+    private string $envFile;
 
     /**
      * @param string $envFile
      */
-    public function __construct($envFile)
+    public function __construct(string $envFile)
     {
         parent::__construct();
         $this->envFile = $envFile;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         // Travis CI configures some things by environment variables, default to those if available.
         $type   = getenv('DB') !== false ? getenv('DB') : null;
@@ -102,17 +87,17 @@ class InstallCommand extends Command
             ->addOption('node-version', null, InputOption::VALUE_REQUIRED, 'Node.js version to use for nvm install (this will override one defined in .nvmrc)', $node);
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->initializeExecute($output, $this->getHelper('process'));
 
         $installOutput    = $this->initializeInstallOutput($output);
-        $this->install    = $this->install ?: new Install($installOutput);
-        $this->factory    = $this->factory ?: $this->initializeInstallerFactory($input);
-        $this->installers = $this->installers ?: new InstallerCollection($installOutput);
+        $this->install    = $this->install ?? new Install($installOutput);
+        $this->factory    = $this->factory ?? $this->initializeInstallerFactory($input);
+        $this->installers = $this->installers ?? new InstallerCollection($installOutput);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->factory->addInstallers($this->installers);
         $this->install->runInstallation($this->installers);
@@ -122,6 +107,8 @@ class InstallCommand extends Command
 
         // Progress bar does not end with a newline.
         $output->writeln('');
+
+        return 0;
     }
 
     /**
@@ -129,7 +116,7 @@ class InstallCommand extends Command
      *
      * @return InstallOutput
      */
-    public function initializeInstallOutput(OutputInterface $output)
+    public function initializeInstallOutput(OutputInterface $output): InstallOutput
     {
         $progressBar = null;
         if ($output->getVerbosity() < OutputInterface::VERBOSITY_VERY_VERBOSE) {
@@ -148,7 +135,7 @@ class InstallCommand extends Command
      *
      * @return InstallerFactory
      */
-    public function initializeInstallerFactory(InputInterface $input)
+    public function initializeInstallerFactory(InputInterface $input): InstallerFactory
     {
         $validate   = new Validate();
         $resolver   = new DatabaseResolver();
@@ -187,29 +174,35 @@ class InstallCommand extends Command
      *
      * @return ConfigDumper
      */
-    public function initializePluginConfigDumper(InputInterface $input)
+    public function initializePluginConfigDumper(InputInterface $input): ConfigDumper
     {
         $dumper = new ConfigDumper();
         $dumper->addSection('filter', 'notPaths', $this->csvToArray($input->getOption('not-paths')));
         $dumper->addSection('filter', 'notNames', $this->csvToArray($input->getOption('not-names')));
 
-        foreach ($this->getApplication()->all() as $command) {
+        $application = $this->getApplication();
+        if (!isset($application)) {
+            return $dumper;
+        }
+
+        foreach ($application->all() as $command) {
             if (!$command instanceof AbstractPluginCommand) {
                 continue;
             }
 
-            $prefix   = strtoupper($command->getName());
-            $envPaths = $prefix.'_IGNORE_PATHS';
-            $envNames = $prefix.'_IGNORE_NAMES';
+            $commandName = $command->getName() ?? '';
+            $prefix      = strtoupper($commandName);
+            $envPaths    = $prefix . '_IGNORE_PATHS';
+            $envNames    = $prefix . '_IGNORE_NAMES';
 
             $paths = getenv($envPaths) !== false ? getenv($envPaths) : null;
             $names = getenv($envNames) !== false ? getenv($envNames) : null;
 
             if (!empty($paths)) {
-                $dumper->addSection('filter-'.$command->getName(), 'notPaths', $this->csvToArray($paths));
+                $dumper->addSection('filter-' . $commandName, 'notPaths', $this->csvToArray($paths));
             }
             if (!empty($names)) {
-                $dumper->addSection('filter-'.$command->getName(), 'notNames', $this->csvToArray($names));
+                $dumper->addSection('filter-' . $commandName, 'notNames', $this->csvToArray($names));
             }
         }
 
@@ -225,7 +218,7 @@ class InstallCommand extends Command
      *
      * @return array
      */
-    public function csvToArray($value)
+    public function csvToArray(?string $value): array
     {
         if ($value === null) {
             return [];

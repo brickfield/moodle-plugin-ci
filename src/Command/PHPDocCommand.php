@@ -17,18 +17,15 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Process\ProcessBuilder;
+use Symfony\Component\Process\Process;
 
 class PHPDocCommand extends AbstractMoodleCommand
 {
     use ExecuteTrait;
 
-    /**
-     * @var Finder
-     */
-    private $finder;
+    private Finder $finder;
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -36,19 +33,19 @@ class PHPDocCommand extends AbstractMoodleCommand
             ->setDescription('Run Moodle PHPDoc Checker on a plugin');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
         $this->initializeExecute($output, $this->getHelper('process'));
         $this->finder = Finder::create()->name('*.php');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->outputHeading($output, 'Moodle PHPDoc Checker on %s');
 
         // We need local_moodlecheck plugin to run this check.
-        $pluginlocation  = __DIR__.'/../../vendor/moodlehq/moodle-local_moodlecheck';
+        $pluginlocation  = __DIR__ . '/../../vendor/moodlehq/moodle-local_moodlecheck';
         $plugin          = new MoodlePlugin($pluginlocation);
         $directory       = $this->moodle->getComponentInstallDirectory($plugin->getComponent());
         if (!is_dir($directory)) {
@@ -62,16 +59,14 @@ class PHPDocCommand extends AbstractMoodleCommand
             return $this->outputSkip($output);
         }
 
-        $process = $this->execute->passThroughProcess(
-            ProcessBuilder::create()
-                ->setPrefix('php')
-                ->add('local/moodlecheck/cli/moodlecheck.php')
-                ->add('-p='.implode(',', $files))
-                ->add('-f=text')
-                ->setTimeout(null)
-                ->setWorkingDirectory($this->moodle->directory)
-                ->getProcess()
-        );
+        $cmd = [
+            'php',
+            'local/moodlecheck/cli/moodlecheck.php',
+            '-p=' . implode(',', $files),
+            '-f=text',
+        ];
+
+        $process = $this->execute->passThroughProcess(new Process($cmd, $this->moodle->directory, null, null, null));
 
         if (isset($filesystem)) {
             // Remove plugin if we added it, so we leave things clean.

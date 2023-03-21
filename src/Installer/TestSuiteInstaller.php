@@ -26,20 +26,9 @@ use Symfony\Component\Process\Process;
  */
 class TestSuiteInstaller extends AbstractInstaller
 {
-    /**
-     * @var Moodle
-     */
-    private $moodle;
-
-    /**
-     * @var MoodlePlugin
-     */
-    private $plugin;
-
-    /**
-     * @var Execute
-     */
-    private $execute;
+    private Moodle$moodle;
+    private MoodlePlugin $plugin;
+    private Execute $execute;
 
     public function __construct(Moodle $moodle, MoodlePlugin $plugin, Execute $execute)
     {
@@ -53,12 +42,12 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return string
      */
-    private function getBehatUtility()
+    private function getBehatUtility(): string
     {
-        return $this->moodle->directory.'/admin/tool/behat/cli/util_single_run.php';
+        return $this->moodle->directory . '/admin/tool/behat/cli/util_single_run.php';
     }
 
-    public function install()
+    public function install(): void
     {
         $this->getOutput()->step('Initialize test suite');
 
@@ -74,7 +63,7 @@ class TestSuiteInstaller extends AbstractInstaller
         $this->injectPHPUnitFilter();
     }
 
-    public function stepCount()
+    public function stepCount(): int
     {
         return 2;
     }
@@ -84,7 +73,7 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return Process[]
      */
-    public function getBehatInstallProcesses()
+    public function getBehatInstallProcesses(): array
     {
         if (!$this->plugin->hasBehatFeatures()) {
             return [];
@@ -94,7 +83,10 @@ class TestSuiteInstaller extends AbstractInstaller
         $this->addEnv('MOODLE_START_BEHAT_SERVERS', 'YES');
 
         return [
-            new MoodleProcess(sprintf('%s --install', $this->getBehatUtility())),
+            new MoodleProcess([
+                $this->getBehatUtility(),
+                '--install',
+            ]),
         ];
     }
 
@@ -103,7 +95,7 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return Process[]
      */
-    public function getUnitTestInstallProcesses()
+    public function getUnitTestInstallProcesses(): array
     {
         if (!$this->plugin->hasUnitTests()) {
             return [];
@@ -111,7 +103,12 @@ class TestSuiteInstaller extends AbstractInstaller
 
         $this->getOutput()->debug('Initialize PHPUnit');
 
-        return [new MoodleProcess(sprintf('%s/admin/tool/phpunit/cli/util.php --install', $this->moodle->directory))];
+        return [
+            new MoodleProcess([
+                $this->moodle->directory . '/admin/tool/phpunit/cli/util.php',
+                '--install',
+            ]),
+        ];
     }
 
     /**
@@ -119,18 +116,28 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return Process[]
      */
-    public function getPostInstallProcesses()
+    public function getPostInstallProcesses(): array
     {
         $processes = [];
 
         if ($this->plugin->hasBehatFeatures()) {
             $this->getOutput()->debug('Enabling Behat');
-            $processes[] = new MoodleProcess(sprintf('%s --enable --add-core-features-to-theme', $this->getBehatUtility()));
+            $processes[] = new MoodleProcess([
+                $this->getBehatUtility(),
+                '--enable',
+                '--add-core-features-to-theme',
+            ]);
         }
         if ($this->plugin->hasUnitTests()) {
             $this->getOutput()->debug('Build PHPUnit config');
-            $processes[] = new MoodleProcess(sprintf('%s/admin/tool/phpunit/cli/util.php --buildconfig', $this->moodle->directory));
-            $processes[] = new MoodleProcess(sprintf('%s/admin/tool/phpunit/cli/util.php --buildcomponentconfigs', $this->moodle->directory));
+            $processes[] = new MoodleProcess([
+                $this->moodle->directory . '/admin/tool/phpunit/cli/util.php',
+                '--buildconfig',
+            ]);
+            $processes[] = new MoodleProcess([
+                $this->moodle->directory . '/admin/tool/phpunit/cli/util.php',
+                '--buildcomponentconfigs',
+            ]);
         }
 
         return $processes;
@@ -139,16 +146,16 @@ class TestSuiteInstaller extends AbstractInstaller
     /**
      * Inject filter XML into the plugin's PHPUnit configuration file.
      */
-    public function injectPHPUnitFilter()
+    public function injectPHPUnitFilter(): void
     {
-        $config = $this->plugin->directory.'/phpunit.xml';
+        $config = $this->plugin->directory . '/phpunit.xml';
         if (!is_file($config)) {
             return;
         }
 
         // If the plugin already has a tests/coverage.php file, then phpunit.xml filter/coverage
         // section is already configured following it. Nothing to do here.
-        $coverage = $this->plugin->directory.'/tests/coverage.php';
+        $coverage = $this->plugin->directory . '/tests/coverage.php';
         // If the file exists and we are Moodle >= 3.7.
         // TODO: Remove the branch condition when 3.6 becomes unsupported by moodle-local-ci.
         if ($this->moodle->getBranch() >= 37 && is_readable($coverage)) {
@@ -169,7 +176,7 @@ class TestSuiteInstaller extends AbstractInstaller
 
         // Or if no existing filter, inject the filter.
         if ($count === 0) {
-            $contents  = str_replace('</phpunit>', $filterXml.'</phpunit>', $subject, $count);
+            $contents  = str_replace('</phpunit>', $filterXml . '</phpunit>', $subject, $count);
         }
 
         if ($count !== 1) {
@@ -185,7 +192,7 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return array
      */
-    private function getCoverageFiles()
+    private function getCoverageFiles(): array
     {
         $finder = Finder::create()
             ->name('*.php')
@@ -203,7 +210,7 @@ class TestSuiteInstaller extends AbstractInstaller
 
         $this->plugin->context = ''; // Revert.
 
-        return $this->removeDbFiles($this->plugin->directory.'/db', $files);
+        return $this->removeDbFiles($this->plugin->directory . '/db', $files);
     }
 
     /**
@@ -214,7 +221,7 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return array
      */
-    private function removeDbFiles($dbPath, array $files)
+    private function removeDbFiles(string $dbPath, array $files): array
     {
         if (!is_dir($dbPath)) {
             return $files;
@@ -226,7 +233,7 @@ class TestSuiteInstaller extends AbstractInstaller
             ->notName('upgradelib.php');
 
         foreach ($dbFiles as $dbFile) {
-            $key = array_search('db/'.$dbFile->getRelativePathname(), $files, true);
+            $key = array_search('db/' . $dbFile->getRelativePathname(), $files, true);
 
             if ($key !== false) {
                 unset($files[$key]);
@@ -243,7 +250,7 @@ class TestSuiteInstaller extends AbstractInstaller
      *
      * @return string
      */
-    private function getFilterXml(array $files)
+    private function getFilterXml(array $files): string
     {
         // Default (Moodle 3.11 and above) template (PHPUnit 9.5 and up).
         $template = <<<'XML'

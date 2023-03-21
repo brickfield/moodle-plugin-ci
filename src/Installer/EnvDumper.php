@@ -23,14 +23,14 @@ class EnvDumper
      * @param array  $values The values to write out
      * @param string $toFile Write to this file
      */
-    public function dump(array $values, $toFile)
+    public function dump(array $values, string $toFile): void
     {
         if (empty($values)) {
             return;
         }
         $content = '';
         foreach ($values as $name => $value) {
-            $content .= sprintf('%s=%s', $name, $value).PHP_EOL;
+            $content .= sprintf('%s=%s', $name, $value) . PHP_EOL;
         }
 
         $filesystem = new Filesystem();

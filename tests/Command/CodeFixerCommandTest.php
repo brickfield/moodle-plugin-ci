@@ -29,7 +29,7 @@ if (defined('PHP_CODESNIFFER_IN_TESTS') === false) {
  */
 class CodeFixerCommandTest extends MoodleTestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -45,9 +45,8 @@ if (true) {
 EOT;
 
         $config = ['filter' => ['notNames' => ['ignore_name.php'], 'notPaths' => ['ignore']]];
-        $this->fs->dumpFile($this->pluginDir.'/.moodle-plugin-ci.yml', Yaml::dump($config));
-        $this->fs->dumpFile($this->pluginDir.'/fixable.php', $content
-);
+        $this->fs->dumpFile($this->pluginDir . '/.moodle-plugin-ci.yml', Yaml::dump($config));
+        $this->fs->dumpFile($this->pluginDir . '/fixable.php', $content);
     }
 
     protected function executeCommand($pluginDir = null)
@@ -77,13 +76,13 @@ EOT;
 
         // Verify various parts of the output.
         $output = $commandTester->getDisplay();
-        $this->assertRegExp('/F\.* 8\.* \/ 8 \(100%\)/', $output);                   // Progress.
-        $this->assertRegExp('/\/fixable.php/', $output);                            // File.
-        $this->assertRegExp('/A TOTAL OF 1 ERROR WERE FIXED IN 1 FILE/', $output);  // Summary.
-        $this->assertRegExp('/Time:.*Memory:/', $output);                           // Time.
+        $this->assertMatchesRegularExpression('/F\.* 8\.* \/ 8 \(100%\)/', $output);                   // Progress.
+        $this->assertMatchesRegularExpression('/\/fixable.php/', $output);                            // File.
+        $this->assertMatchesRegularExpression('/A TOTAL OF 1 ERROR WERE FIXED IN 1 FILE/', $output);  // Summary.
+        $this->assertMatchesRegularExpression('/Time:.*Memory:/', $output);                           // Time.
 
         // Also verify display info is correct.
-        $this->assertRegExp('/RUN  Code Beautifier and Fixer on local_ci/', $output);
+        $this->assertMatchesRegularExpression('/RUN  Code Beautifier and Fixer/', $commandTester->getDisplay());
 
         $expected = <<<'EOT'
 <?php
@@ -95,15 +94,15 @@ if (true) {
 }
 
 EOT;
-        $this->assertSame($expected, file_get_contents($this->pluginDir.'/fixable.php'));
+        $this->assertSame($expected, file_get_contents($this->pluginDir . '/fixable.php'));
     }
 
     public function testExecuteNoFiles()
     {
         // Just random directory with no PHP files.
-        $commandTester = $this->executeCommand($this->pluginDir.'/tests/behat');
+        $commandTester = $this->executeCommand($this->pluginDir . '/tests/behat');
         $this->assertSame(0, $commandTester->getStatusCode());
 
-        $this->assertRegExp('/No relevant files found to process, free pass!/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/No relevant files found to process, free pass!/', $commandTester->getDisplay());
     }
 }

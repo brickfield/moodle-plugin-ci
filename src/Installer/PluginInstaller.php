@@ -24,25 +24,10 @@ use Symfony\Component\Finder\SplFileInfo;
  */
 class PluginInstaller extends AbstractInstaller
 {
-    /**
-     * @var Moodle
-     */
-    private $moodle;
-
-    /**
-     * @var MoodlePlugin
-     */
-    private $plugin;
-
-    /**
-     * @var string
-     */
-    private $extraPluginsDir;
-
-    /**
-     * @var ConfigDumper
-     */
-    private $configDumper;
+    private Moodle $moodle;
+    private MoodlePlugin $plugin;
+    private ?string $extraPluginsDir;
+    private ConfigDumper $configDumper;
 
     /**
      * @param Moodle       $moodle
@@ -50,7 +35,7 @@ class PluginInstaller extends AbstractInstaller
      * @param string       $extraPluginsDir
      * @param ConfigDumper $configDumper
      */
-    public function __construct(Moodle $moodle, MoodlePlugin $plugin, $extraPluginsDir, ConfigDumper $configDumper)
+    public function __construct(Moodle $moodle, MoodlePlugin $plugin, ?string $extraPluginsDir, ConfigDumper $configDumper)
     {
         $this->moodle          = $moodle;
         $this->plugin          = $plugin;
@@ -58,7 +43,7 @@ class PluginInstaller extends AbstractInstaller
         $this->configDumper    = $configDumper;
     }
 
-    public function install()
+    public function install(): void
     {
         $this->getOutput()->step('Install plugins');
 
@@ -71,7 +56,7 @@ class PluginInstaller extends AbstractInstaller
 
             if ($plugin->getComponent() === $this->plugin->getComponent()) {
                 $this->addEnv('PLUGIN_DIR', $directory);
-                $this->createConfigFile($directory.'/.moodle-plugin-ci.yml');
+                $this->createConfigFile($directory . '/.moodle-plugin-ci.yml');
 
                 // Update plugin so other installers use the installed path.
                 $this->plugin->directory = $directory;
@@ -82,7 +67,7 @@ class PluginInstaller extends AbstractInstaller
     /**
      * @return MoodlePluginCollection
      */
-    public function scanForPlugins()
+    public function scanForPlugins(): MoodlePluginCollection
     {
         $plugins = new MoodlePluginCollection();
 
@@ -106,7 +91,7 @@ class PluginInstaller extends AbstractInstaller
      *
      * @return string
      */
-    public function installPluginIntoMoodle(MoodlePlugin $plugin)
+    public function installPluginIntoMoodle(MoodlePlugin $plugin): string
     {
         $this->getOutput()->info(sprintf('Installing %s', $plugin->getComponent()));
 
@@ -130,7 +115,7 @@ class PluginInstaller extends AbstractInstaller
      *
      * @param string $toFile
      */
-    public function createConfigFile($toFile)
+    public function createConfigFile(string $toFile): void
     {
         if (file_exists($toFile)) {
             $this->getOutput()->debug('Config file already exists in plugin, skipping creation of config file.');
@@ -143,10 +128,10 @@ class PluginInstaller extends AbstractInstaller
             return;
         }
         $this->configDumper->dump($toFile);
-        $this->getOutput()->debug('Created config file at '.$toFile);
+        $this->getOutput()->debug('Created config file at ' . $toFile);
     }
 
-    public function stepCount()
+    public function stepCount(): int
     {
         return 1;
     }

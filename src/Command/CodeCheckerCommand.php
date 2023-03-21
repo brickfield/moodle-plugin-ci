@@ -17,7 +17,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Process\ProcessBuilder;
+use Symfony\Component\Process\Process;
 
 /**
  * Run Moodle CodeSniffer standard on a plugin.
@@ -27,29 +27,32 @@ class CodeCheckerCommand extends AbstractPluginCommand
     use ExecuteTrait;
 
     /**
-     * @var string Path to the temp file where the json report results will be stored
+     * Path to the temp file where the json report results will be stored.
      */
-    protected $tempFile;
+    protected string $tempFile;
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
-        $this->setName('codechecker')
+        $this->setName('phpcs')
+            ->setAliases(['codechecker'])
             ->setDescription('Run Moodle CodeSniffer standard on a plugin')
             ->addOption('standard', 's', InputOption::VALUE_REQUIRED, 'The name or path of the coding standard to use', 'moodle')
             ->addOption('max-warnings', null, InputOption::VALUE_REQUIRED,
-                'Number of warnings to trigger nonzero exit code - default: -1', -1);
+                'Number of warnings to trigger nonzero exit code - default: -1', -1)
+            ->addOption('test-version', null, InputOption::VALUE_REQUIRED,
+                'Version or range of version to test with PHPCompatibility', 0);
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
         $this->initializeExecute($output, $this->getHelper('process'));
-        $this->tempFile = sys_get_temp_dir().'/moodle-plugin-ci-code-checker-summary-'.time();
+        $this->tempFile = sys_get_temp_dir() . '/moodle-plugin-ci-code-checker-summary-' . time();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->outputHeading($output, 'Moodle CodeSniffer standard on %s');
 
@@ -58,38 +61,42 @@ class CodeCheckerCommand extends AbstractPluginCommand
             return $this->outputSkip($output);
         }
 
-        $builder = ProcessBuilder::create()
-            ->setPrefix('php')
-            ->add(__DIR__.'/../../vendor/squizlabs/php_codesniffer/bin/phpcs')
-            ->add('--standard='.($input->getOption('standard') ?: 'moodle'))
-            ->add('--extensions=php')
-            ->add('-p')
-            ->add('-w')
-            ->add('-s')
-            ->add('--no-cache')
-            ->add($output->isDecorated() ? '--colors' : '--no-colors')
-            ->add('--report-full')
-            ->add('--report-width=132')
-            ->add('--encoding=utf-8')
-            ->setWorkingDirectory($this->plugin->directory)
-            ->setTimeout(null);
+        $cmd = [
+            'php', __DIR__ . '/../../vendor/squizlabs/php_codesniffer/bin/phpcs',
+            '--standard=' . ($input->getOption('standard') ?: 'moodle'),
+            '--extensions=php',
+            '-p',
+            '-w',
+            '-s',
+            '--no-cache',
+            $output->isDecorated() ? '--colors' : '--no-colors',
+            '--report-full',
+            '--report-width=132',
+            '--encoding=utf-8',
+        ];
 
         // If we aren't using the max-warnings option, then we can forget about warnings and tell phpcs
         // to ignore them for exit-code purposes (still they will be reported in the output).
         if ($input->getOption('max-warnings') < 0) {
-            $builder->add('--runtime-set')->add('ignore_warnings_on_exit')->add(' 1');
+            array_push($cmd, '--runtime-set', 'ignore_warnings_on_exit', '1');
         } else {
             // If we are using the max-warnings option, we need the summary report somewhere to get
             // the total number of errors and warnings from there.
-            $builder->add('--report-json='.$this->tempFile);
+            $cmd[] = '--report-json=' . $this->tempFile;
+        }
+
+        // Show PHPCompatibility backward-compatibility errors for a version or version range.
+        $testVersion = $input->getOption('test-version');
+        if (!empty($testVersion)) {
+            array_push($cmd, '--runtime-set', 'testVersion', $testVersion);
         }
 
         // Add the files to process.
         foreach ($files as $file) {
-            $builder->add($file);
+            $cmd[] = $file;
         }
 
-        $process = $this->execute->passThroughProcess($builder->getProcess());
+        $process = $this->execute->passThroughProcess(new Process($cmd, $this->plugin->directory, null, null, null));
 
         // If we aren't using the max-warnings option, process exit code is enough for us.
         if ($input->getOption('max-warnings') < 0) {

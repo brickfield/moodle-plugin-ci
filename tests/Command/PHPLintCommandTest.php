@@ -19,28 +19,23 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class PHPLintCommandTest extends \PHPUnit\Framework\TestCase
 {
-    private $pluginDir;
+    private string $pluginDir = __DIR__ . '/../Fixture/moodle-local_ci';
 
-    protected function setUp()
+    protected function executeCommand(?string $customPluginDir = null)
     {
-        $this->pluginDir = __DIR__.'/../Fixture/moodle-local_ci';
-    }
-
-    protected function executeCommand($pluginDir = null)
-    {
-        if ($pluginDir === null) {
-            $pluginDir = $this->pluginDir;
+        if ($customPluginDir) {
+            $this->pluginDir = $customPluginDir;
         }
 
         $command         = new PHPLintCommand();
-        $command->plugin = new DummyMoodlePlugin($pluginDir);
+        $command->plugin = new DummyMoodlePlugin($this->pluginDir);
 
         $application = new Application();
         $application->add($command);
 
         $commandTester = new CommandTester($application->find('phplint'));
         $commandTester->execute([
-            'plugin' => $pluginDir,
+            'plugin' => $this->pluginDir,
         ]);
 
         return $commandTester;
@@ -57,9 +52,9 @@ class PHPLintCommandTest extends \PHPUnit\Framework\TestCase
     public function testExecuteNoFiles()
     {
         // Just random directory with no PHP files.
-        $commandTester = $this->executeCommand($this->pluginDir.'/tests/behat');
+        $commandTester = $this->executeCommand($this->pluginDir . '/tests/behat');
         $this->assertSame(0, $commandTester->getStatusCode());
-        $this->assertRegExp('/No relevant files found to process, free pass!/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/No relevant files found to process, free pass!/', $commandTester->getDisplay());
     }
 
     public function testExecuteNoPlugin()

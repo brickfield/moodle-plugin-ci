@@ -17,12 +17,12 @@ namespace MoodlePluginCI\Installer\Database;
  */
 class PostgresDatabase extends AbstractDatabase
 {
-    public $user = 'postgres';
-    public $type = 'pgsql';
+    public string $user = 'postgres';
+    public string $type = 'pgsql';
 
-    public function getCreateDatabaseCommand()
+    public function getCreateDatabaseCommand(): array
     {
-        // Travis changed the PostgreSQL package for version 11 and up so, instead of
+        // Travis changed the Postgres package for version 11 and up so, instead of
         // using the "postgres" user it now uses the "travis" one. And the port is
         // 5433 instead of 5432. We use the existence of the PGVER environmental
         // variable to decide which defaults to use.
@@ -33,23 +33,61 @@ class PostgresDatabase extends AbstractDatabase
         // to trust/peer the local connections and then restart the database.
         //
         // So, at the end, we are going to use socket connections (host = '')
-        // that is perfectly ok for Travis (non dockered database). Only if they
+        // that is perfectly ok for Travis (non docker database). Only if they
         // haven't been configured another way manually (user, host, port).
         if ($this->user === 'postgres' && getenv('PGVER') && is_numeric(getenv('PGVER')) && getenv('PGVER') >= 11) {
             $this->user = 'travis';
             if ($this->port === '') { // Only if the port is not set.
                 if ($this->host === 'localhost') {
-                    $this->host = ''; // Use sockets or we'll need to edit pg_hba.conf and restart the server. Only if not set.
+                    $this->host = ''; // Use sockets, or we'll need to edit pg_hba.conf and restart the server. Only if not set.
                     $this->port = '5433'; // We also need the port to find the correct socket file.
+                    // Travis did it again, for PostgreSQL 13, they are back to port 5432. We need that to find the socket.
+                    if ((int) getenv('PGVER') === 13) {
+                        $this->port = '5432'; // We also need the port to find the correct socket file.
+                    }
                 }
             }
         }
-        $pass     = !empty($this->pass) ? 'env PGPASSWORD='.escapeshellarg($this->pass).' ' : '';
-        $user     = escapeshellarg($this->user);
-        $host     = escapeshellarg($this->host);
-        $port     = !empty($this->port) ? ' --port '.escapeshellarg($this->port) : '';
-        $createDB = escapeshellarg(sprintf('CREATE DATABASE "%s";', $this->name));
 
-        return sprintf('%spsql -c %s -U %s -h %s%s', $pass, $createDB, $user, $host, $port);
+        $passcmd = [];
+        if (!empty($this->pass)) {
+            $passcmd = [
+                'env',
+                'PGPASSWORD=' . $this->pass,
+            ];
+        }
+
+        $hostcmd = [];
+        if (!empty($this->host)) {
+            $hostcmd = [
+                '-h',
+                $this->host,
+            ];
+        }
+
+        $portcmd = [];
+        if (!empty($this->port)) {
+            $portcmd = [
+                '--port',
+                $this->port,
+            ];
+        }
+
+        $cmd = array_merge(
+            $passcmd,
+            [
+                'psql',
+                '-c',
+                sprintf('CREATE DATABASE "%s";', $this->name),
+                '-U',
+                $this->user,
+                '-d',
+                'postgres',
+            ],
+            $hostcmd,
+            $portcmd
+        );
+
+        return array_filter($cmd); // Remove empties.
     }
 }

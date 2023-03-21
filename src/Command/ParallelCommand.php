@@ -19,16 +19,18 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 
 /**
- * Runs all of the testing commands in parallel.
+ * Runs all the testing commands in parallel.
  */
 class ParallelCommand extends AbstractMoodleCommand
 {
     /**
-     * @var Process[]
+     * This is an array of arrays of processes, so that we can run them in parallel.
+     *
+     * @var Process[][]
      */
-    public $processes;
+    public array $processes = [];
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -36,41 +38,52 @@ class ParallelCommand extends AbstractMoodleCommand
             ->setDescription('Run all of the tests and analysis against a plugin');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
 
         $this->processes = $this->processes ?: $this->initializeProcesses();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->outputHeading($output, 'All checks in parallel on %s (output will show below)');
+
         $this->runProcesses($output);
 
         return $this->reportOnProcesses($input, $output);
     }
 
     /**
-     * @return Process[]
+     * @return Process[][]
      */
-    public function initializeProcesses()
+    public function initializeProcesses(): array
     {
-        $bin    = 'php '.$_SERVER['PHP_SELF'];
+        $bin    = ['php', $_SERVER['PHP_SELF'] ?? 'moodle-plugin-ci'];
         $plugin = $this->plugin->directory;
         $moodle = $this->moodle->directory;
 
+        // Note that we cannot run them 100% in parallel, because some of them install and remove
+        // code from the moodle checkout, and that may cause problems to other processes. Hence, we
+        // have them grouped into parallel-safe groups.
         return [
-            'phplint'     => new Process(sprintf('%s phplint --ansi %s', $bin, $plugin)),
-            'phpcpd'      => new Process(sprintf('%s phpcpd --ansi %s', $bin, $plugin)),
-            'phpmd'       => new Process(sprintf('%s phpmd --ansi -m %s %s', $bin, $moodle, $plugin)),
-            'codechecker' => new Process(sprintf('%s codechecker --ansi %s', $bin, $plugin)),
-            'phpdoc'      => new Process(sprintf('%s phpdoc --ansi %s', $bin, $plugin)),
-            'validate'    => new Process(sprintf('%s validate --ansi -m %s %s', $bin, $moodle, $plugin)),
-            'savepoints'  => new Process(sprintf('%s savepoints --ansi %s', $bin, $plugin)),
-            'mustache'    => new Process(sprintf('%s mustache --ansi -m %s %s', $bin, $moodle, $plugin)),
-            'grunt'       => new Process(sprintf('%s grunt --ansi -m %s %s', $bin, $moodle, $plugin)),
-            'phpunit'     => new Process(sprintf('%s phpunit --ansi -m %s %s', $bin, $moodle, $plugin)),
-            'behat'       => new Process(sprintf('%s behat --ansi -m %s %s', $bin, $moodle, $plugin)),
+            [
+                // The 'savepoints' command installs and removes local/plugin/check_upgrade_savepoints.php.
+                'savepoints'  => new Process(array_merge($bin, ['savepoints', '--ansi', $plugin])),
+                // The 'phpdoc' command installs and removes local/moodlecheck.
+                'phpdoc'      => new Process(array_merge($bin, ['phpdoc', '--ansi', $plugin])),
+            ],
+            [
+                'phplint'     => new Process(array_merge($bin, ['phplint', '--ansi', $plugin])),
+                'phpcpd'      => new Process(array_merge($bin, ['phpcpd', '--ansi', $plugin])),
+                'phpmd'       => new Process(array_merge($bin, ['phpmd', '--ansi', '-m', $moodle, $plugin])),
+                'codechecker' => new Process(array_merge($bin, ['codechecker', '--ansi', $plugin])),
+                'validate'    => new Process(array_merge($bin, ['validate', '--ansi', '-m', $moodle, $plugin])),
+                'mustache'    => new Process(array_merge($bin, ['mustache', '--ansi', '-m', $moodle, $plugin])),
+                'grunt'       => new Process(array_merge($bin, ['grunt', '--ansi', '-m', $moodle, $plugin])),
+                'phpunit'     => new Process(array_merge($bin, ['phpunit', '--ansi', '-m', $moodle, $plugin])),
+                'behat'       => new Process(array_merge($bin, ['behat', '--ansi', '-m', $moodle, $plugin])),
+            ],
         ];
     }
 
@@ -79,22 +92,23 @@ class ParallelCommand extends AbstractMoodleCommand
      *
      * @param OutputInterface $output
      */
-    private function runProcesses(OutputInterface $output)
+    private function runProcesses(OutputInterface $output): void
     {
         $progress = new ProgressIndicator($output);
         $progress->start('Starting...');
 
-        // Start all of the processes.
-        foreach ($this->processes as $process) {
-            $process->start();
-            $progress->advance();
-        }
-
-        // Wait for each to be done.
-        foreach ($this->processes as $name => $process) {
-            $progress->setMessage(sprintf('Waiting for moodle-plugin-ci %s...', $name));
-            while ($process->isRunning()) {
+        // Start all the processes, in groups of parallel-safe processes.
+        foreach ($this->processes as $processGroup) {
+            foreach ($processGroup as $name => $process) {
+                $process->start();
                 $progress->advance();
+            }
+            // Wait until the group is done before starting with the next group.
+            foreach ($processGroup as $name => $process) {
+                $progress->setMessage(sprintf('Waiting for moodle-plugin-ci %s...', $name));
+                while ($process->isRunning()) {
+                    $progress->advance();
+                }
             }
         }
         $progress->finish('Done!');
@@ -108,24 +122,28 @@ class ParallelCommand extends AbstractMoodleCommand
      *
      * @return int
      */
-    private function reportOnProcesses(InputInterface $input, OutputInterface $output)
+    private function reportOnProcesses(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
 
         $result = 0;
-        foreach ($this->processes as $name => $process) {
-            $style->newLine();
 
-            echo $process->getOutput();
+        // Report the output of all the processes, in groups of parallel-safe processes.
+        foreach ($this->processes as $processGroup) {
+            foreach ($processGroup as $name => $process) {
+                $style->newLine();
 
-            if (!$process->isSuccessful()) {
-                $result = 1;
-                $style->error(sprintf('Command %s failed', $name));
-            }
-            $errorOutput = $process->getErrorOutput();
-            if (!empty($errorOutput)) {
-                $style->error(sprintf('Error output for %s command', $name));
-                $style->writeln($errorOutput);
+                echo $process->getOutput();
+
+                if (!$process->isSuccessful()) {
+                    $result = 1;
+                    $style->error(sprintf('Command %s failed', $name));
+                }
+                $errorOutput = $process->getErrorOutput();
+                if (!empty($errorOutput)) {
+                    $style->error(sprintf('Error output for %s command', $name));
+                    $style->writeln($errorOutput);
+                }
             }
         }
 

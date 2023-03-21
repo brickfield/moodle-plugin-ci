@@ -22,40 +22,23 @@ use Symfony\Component\Process\Process;
  */
 class VendorInstaller extends AbstractInstaller
 {
-    /**
-     * @var Moodle
-     */
-    private $moodle;
-
-    /**
-     * @var MoodlePlugin
-     */
-    private $plugin;
-
-    /**
-     * @var Execute
-     */
-    private $execute;
-
-    /**
-     * @var string
-     */
-    public $nodeVer;
+    private Moodle $moodle;
+    private MoodlePlugin $plugin;
+    private Execute $execute;
+    public ?string $nodeVer;
 
     /**
      * Define legacy Node version to use when .nvmrc is absent (Moodle < 3.5).
-     *
-     * @var string
      */
-    private $legacyNodeVersion = 'lts/carbon';
+    private string $legacyNodeVersion = 'lts/carbon';
 
     /**
      * @param Moodle       $moodle
      * @param MoodlePlugin $plugin
      * @param Execute      $execute
-     * @param string       $nodeVer
+     * @param string|null  $nodeVer
      */
-    public function __construct(Moodle $moodle, MoodlePlugin $plugin, Execute $execute, $nodeVer)
+    public function __construct(Moodle $moodle, MoodlePlugin $plugin, Execute $execute, ?string $nodeVer)
     {
         $this->moodle  = $moodle;
         $this->plugin  = $plugin;
@@ -63,7 +46,7 @@ class VendorInstaller extends AbstractInstaller
         $this->nodeVer = $nodeVer;
     }
 
-    public function install()
+    public function install(): void
     {
         if ($this->canInstallNode()) {
             $this->getOutput()->step('Installing Node.js');
@@ -74,23 +57,30 @@ class VendorInstaller extends AbstractInstaller
 
         $processes = [];
         if ($this->plugin->hasUnitTests() || $this->plugin->hasBehatFeatures()) {
-            $processes[] = new Process('composer install --no-interaction --prefer-dist', $this->moodle->directory, null, null, null);
+            $processes[] = Process::fromShellCommandline('composer install --no-interaction --prefer-dist',
+                $this->moodle->directory, null, null, null);
         }
-        $processes[] = new Process('npm install --no-progress grunt', null, null, null, null);
+        $processes[] = Process::fromShellCommandline('npm install --no-progress grunt', null, null, null, null);
 
         $this->execute->mustRunAll($processes);
 
         $this->getOutput()->step('Install npm dependencies');
 
-        $this->execute->mustRun(new Process('npm install --no-progress', $this->moodle->directory, null, null, null));
+        $this->execute->mustRun(
+            Process::fromShellCommandline('npm install --no-progress', $this->moodle->directory, null, null, null)
+        );
         if ($this->plugin->hasNodeDependencies()) {
-            $this->execute->mustRun(new Process('npm install --no-progress', $this->plugin->directory, null, null, null));
+            $this->execute->mustRun(
+                Process::fromShellCommandline('npm install --no-progress', $this->plugin->directory, null, null, null)
+            );
         }
 
-        $this->execute->mustRun(new Process('npx grunt ignorefiles', $this->moodle->directory, null, null, null));
+        $this->execute->mustRun(
+            Process::fromShellCommandline('npx grunt ignorefiles', $this->moodle->directory, null, null, null)
+        );
     }
 
-    public function stepCount()
+    public function stepCount(): int
     {
         return ($this->canInstallNode()) ? 3 : 2;
     }
@@ -100,7 +90,7 @@ class VendorInstaller extends AbstractInstaller
      *
      * @return bool
      */
-    public function canInstallNode()
+    public function canInstallNode(): bool
     {
         return !empty(getenv('NVM_DIR'));
     }
@@ -113,24 +103,24 @@ class VendorInstaller extends AbstractInstaller
      * for install step). If there is none, use version from .nvmrc in Moodle
      * directory. If file does not exist, use legacy version (lts/carbon).
      */
-    public function installNode()
+    public function installNode(): void
     {
         if (!empty($this->nodeVer)) {
             // Use Node version specified by user.
             $reqversion = $this->nodeVer;
-            file_put_contents($this->moodle->directory.'/.nvmrc', $reqversion);
-        } elseif (is_file($this->moodle->directory.'/.nvmrc')) {
-            // Use Node version defined in .nvmrc.
-            $reqversion = file_get_contents($this->moodle->directory.'/.nvmrc');
-        } else {
-            // No .nvmrc found, we likely deal with Moodle < 3.5. Use legacy version (lts/carbon).
+            file_put_contents($this->moodle->directory . '/.nvmrc', $reqversion);
+        } elseif (!is_file($this->moodle->directory . '/.nvmrc')) {
+            // Use legacy version. Since Moodle 3.5, all branches have the .nvmrc file.
             $reqversion = $this->legacyNodeVersion;
-            file_put_contents($this->moodle->directory.'/.nvmrc', $reqversion);
+            file_put_contents($this->moodle->directory . '/.nvmrc', $reqversion);
         }
 
         $nvmDir  = getenv('NVM_DIR');
         $cmd     = ". $nvmDir/nvm.sh && nvm install && nvm use && echo \"NVM_BIN=\$NVM_BIN\"";
-        $process = $this->execute->passThrough($cmd, $this->moodle->directory);
+
+        $process = $this->execute->passThroughProcess(
+            Process::fromShellCommandline($cmd, $this->moodle->directory, null, null, null)
+        );
         if (!$process->isSuccessful()) {
             throw new \RuntimeException('Node.js installation failed.');
         }
@@ -140,7 +130,7 @@ class VendorInstaller extends AbstractInstaller
         preg_match('/^NVM_BIN=(.+)$/m', trim($process->getOutput()), $matches);
         if (isset($matches[1]) && is_dir($matches[1])) {
             $this->addEnv('RUNTIME_NVM_BIN', $matches[1]);
-            putenv('RUNTIME_NVM_BIN='.$matches[1]);
+            putenv('RUNTIME_NVM_BIN=' . $matches[1]);
         } else {
             $this->getOutput()->debug('Can\'t retrieve NVM_BIN content from the command output.');
         }

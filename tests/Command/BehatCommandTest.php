@@ -21,7 +21,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class BehatCommandTest extends MoodleTestCase
 {
-    protected function executeCommand($pluginDir = null, $moodleDir = null)
+    protected function executeCommand($pluginDir = null, $moodleDir = null): CommandTester
     {
         if ($pluginDir === null) {
             $pluginDir = $this->pluginDir;
@@ -54,22 +54,22 @@ class BehatCommandTest extends MoodleTestCase
 
     public function testExecuteNoFeatures()
     {
-        $this->fs->remove($this->pluginDir.'/tests/behat');
+        $this->fs->remove($this->pluginDir . '/tests/behat');
 
         $commandTester = $this->executeCommand();
         $this->assertSame(0, $commandTester->getStatusCode());
-        $this->assertRegExp('/No Behat features to run, free pass!/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/No Behat features to run, free pass!/', $commandTester->getDisplay());
     }
 
     public function testExecuteNoPlugin()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->executeCommand($this->moodleDir.'/no/plugin');
+        $this->executeCommand($this->moodleDir . '/no/plugin');
     }
 
     public function testExecuteNoMoodle()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->executeCommand($this->moodleDir.'/no/moodle');
+        $this->executeCommand($this->moodleDir . '/no/moodle');
     }
 }

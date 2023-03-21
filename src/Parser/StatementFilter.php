@@ -16,7 +16,9 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
@@ -32,7 +34,7 @@ class StatementFilter
      *
      * @return Function_[]
      */
-    public function filterFunctions(array $statements)
+    public function filterFunctions(array $statements): array
     {
         return array_filter($statements, function ($statement) {
             return $statement instanceof Function_;
@@ -46,7 +48,7 @@ class StatementFilter
      *
      * @return Class_[]
      */
-    public function filterClasses(array $statements)
+    public function filterClasses(array $statements): array
     {
         return array_filter($statements, function ($statement) {
             return $statement instanceof Class_;
@@ -58,18 +60,24 @@ class StatementFilter
      *
      * @param array $statements
      *
-     * @return array
+     * @return string[]
      */
-    public function filterClassNames(array $statements)
+    public function filterClassNames(array $statements): array
     {
         $names = [];
         foreach ($this->filterClasses($statements) as $class) {
-            $names[] = $class->name;
+            if (!isset($class->name)) {
+                continue;
+            }
+            $names[] = (string) $class->name;
         }
 
         foreach ($this->filterNamespaces($statements) as $namespace) {
             foreach ($this->filterClasses($namespace->stmts) as $class) {
-                $names[] = $namespace->name.'\\'.$class->name;
+                if (!isset($class->name)) {
+                    continue;
+                }
+                $names[] = ($namespace->name ?? '') . '\\' . $class->name;
             }
         }
 
@@ -81,7 +89,7 @@ class StatementFilter
      *
      * @return Namespace_[]
      */
-    public function filterNamespaces(array $statements)
+    public function filterNamespaces(array $statements): array
     {
         return array_filter($statements, function ($statement) {
             return $statement instanceof Namespace_;
@@ -89,21 +97,23 @@ class StatementFilter
     }
 
     /**
-     * @param array $statements
+     * Extract all the assignment expressions from the statements.
+     *
+     * @param Stmt[] $statements
      *
      * @return Assign[]
      */
-    public function filterAssignments(array $statements)
+    public function filterAssignments(array $statements): array
     {
-        $stmts = array_filter($statements, function ($statement) {
-            // Since php-parser 4.0, expression statements are enclosed into
-            // new Stmt\Expression node, confirm our Assignment is there.
-            return $statement instanceof Expression && $statement->expr instanceof Assign;
-        });
-        // Return the Assignments only.
-        return array_map(function ($statement) {
-            return $statement->expr;
-        }, $stmts);
+        $assigns = [];
+        foreach ($statements as $statement) {
+            // Only expressions that are assigns.
+            if ($statement instanceof Expression && $statement->expr instanceof Assign) {
+                $assigns[] = $statement->expr;
+            }
+        }
+
+        return $assigns;
     }
 
     /**
@@ -115,11 +125,13 @@ class StatementFilter
      *
      * @return Assign
      */
-    public function findFirstVariableAssignment(array $statements, $name, $notFoundError = null)
+    public function findFirstVariableAssignment(array $statements, string $name, ?string $notFoundError = null): Assign
     {
         foreach ($this->filterAssignments($statements) as $assign) {
-            if ($assign->var instanceof Variable && (string) $assign->var->name === $name) {
-                return $assign;
+            if ($assign->var instanceof Variable && is_string($assign->var->name)) {
+                if ($assign->var->name === $name) {
+                    return $assign;
+                }
             }
         }
 
@@ -138,18 +150,17 @@ class StatementFilter
      *
      * @return Assign
      */
-    public function findFirstPropertyFetchAssignment(array $statements, $variable, $property, $notFoundError = null)
+    public function findFirstPropertyFetchAssignment(array $statements, string $variable, string $property, ?string $notFoundError = null): Assign
     {
         foreach ($this->filterAssignments($statements) as $assign) {
-            if (!$assign->var instanceof PropertyFetch) {
-                continue;
-            }
-            if ((string) $assign->var->name !== $property) {
-                continue;
-            }
-            $var = $assign->var->var;
-            if ($var instanceof Variable && (string) $var->name === $variable) {
-                return $assign;
+            if ($assign->var instanceof PropertyFetch && $assign->var->name instanceof Identifier) {
+                $propName = $assign->var->name->name;
+                $var      = $assign->var->var;
+                if ($var instanceof Variable && is_string($var->name)) {
+                    if ($var->name === $variable && $propName === $property) {
+                        return $assign;
+                    }
+                }
             }
         }
 
@@ -163,7 +174,7 @@ class StatementFilter
      *
      * @return array
      */
-    public function arrayStringKeys(Array_ $array)
+    public function arrayStringKeys(Array_ $array): array
     {
         $keys = [];
         foreach ($array->items as $item) {

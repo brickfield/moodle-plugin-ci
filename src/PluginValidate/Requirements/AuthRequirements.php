@@ -19,17 +19,17 @@ use MoodlePluginCI\PluginValidate\Finder\FileTokens;
  */
 class AuthRequirements extends GenericRequirements
 {
-    public function getRequiredFiles()
+    public function getRequiredFiles(): array
     {
         return array_merge(parent::getRequiredFiles(), [
             'auth.php',
         ]);
     }
 
-    public function getRequiredClasses()
+    public function getRequiredClasses(): array
     {
         return [
-            FileTokens::create('auth.php')->mustHave('auth_plugin_'.$this->plugin->name),
+            FileTokens::create('auth.php')->mustHave('auth_plugin_' . $this->plugin->name),
         ];
     }
 }

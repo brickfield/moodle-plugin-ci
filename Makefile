@@ -1,7 +1,7 @@
 COMPOSER := composer
 PHPUNIT  := vendor/bin/phpunit
-FIXER    := php build/php-cs-fixer.phar
-PSALM    := php build/psalm.phar
+FIXER    := vendor/bin/php-cs-fixer
+PSALM    := vendor/bin/psalm
 CMDS     = $(wildcard src/Command/*.php)
 
 .PHONY:test
@@ -21,6 +21,10 @@ validate: check-init validate-version psalm check-docs
 	$(COMPOSER) validate
 	XDEBUG_MODE=coverage $(PHPUNIT) --verbose --coverage-text
 
+.PHONY:coverage-phpunit
+coverage-phpunit: check-init
+	XDEBUG_MODE=coverage $(PHPUNIT) --verbose --coverage-clover build/logs/clover.xml
+
 .PHONY:build
 build: build/moodle-plugin-ci.phar
 
@@ -30,7 +34,7 @@ validate-version:
 
 .PHONY:psalm
 psalm: check-init
-	$(PSALM)
+	$(PSALM) --show-info=true
 
 .PHONY:psalm-update-baseline
 psalm-update-baseline: check-init
@@ -43,12 +47,12 @@ check-docs: docs/CLI.md
 
 # Setup for testing.
 .PHONY: init
-init: build/php-cs-fixer.phar build/psalm.phar composer.lock composer.json
+init: composer.lock composer.json
 	$(COMPOSER) selfupdate
 	$(COMPOSER) install --no-progress
 
 .PHONY: update
-update: check-init build/php-cs-fixer.phar build/psalm.phar
+update: check-init
 	$(COMPOSER) selfupdate
 	$(FIXER) selfupdate
 	$(COMPOSER) update
@@ -56,23 +60,16 @@ update: check-init build/php-cs-fixer.phar build/psalm.phar
 .PHONY: clean
 clean:
 	rm -f build/*.phar
-	rm -f build/*.clover
+	rm -rf build/logs
 	rm -rf vendor
 	rm -f .php_cs.cache
+	rm -rf .psalm.cache
 
 # Output error if not initialised.
 check-init:
 ifeq (, $(wildcard vendor))
 	$(error Run 'make init' first)
 endif
-
-# Update download URL from https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases
-build/php-cs-fixer.phar:
-	curl -LSs https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v2.19.0/php-cs-fixer.phar -o build/php-cs-fixer.phar
-
-# Update download URL from https://github.com/vimeo/psalm/releases
-build/psalm.phar:
-	curl -LSs https://github.com/vimeo/psalm/releases/download/3.18.2/psalm.phar -o build/psalm.phar
 
 build/box.phar:
 	@cd build && curl -LSs https://box-project.github.io/box2/installer.php | php

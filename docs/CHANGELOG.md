@@ -10,6 +10,43 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 
 ## [Unreleased]
 
+## [3.4.10] - 2023-03-14
+### Changed
+- Various improvements to the Travis & GHA dist files and documentation.
+- Updated project dependencies to current [moodle-cs](https://github.com/moodlehq/moodle-cs) version.
+
+## [3.4.9] - 2023-03-08
+### Added
+- Improved release process: Now every version changelog (this file) is automatically added to the release notes.
+- New `--test-version` option added to the `phpcs` (`codechecker`) command in order to specify the PHP version `(x.y)` or range of PHP versions `(x.y-w.z)` to be checked by the `PHPCompatibility` standard (part of the `moodle` standard).
+
+## [3.4.8] - 2023-03-06
+### Changed
+- Modified the Travis templates and docs to point that, since [MDL-75012](https://tracker.moodle.org/browse/MDL-75012) (core update to Node 18), Ubuntu Focal 20.04 is the minimum required by runs.
+- ACTION REQUIRED: Review any Travis configuration for 39_STABLE and up. Now they require Ubuntu 20.04 (focal) to be specified.
+- The `codechecker` command has been renamed to `phpcs`, to better match other command names. The old name remains as alias, so no change is required.
+
+## [3.4.7] - 2023-03-04
+### Changed
+- Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) version.
+- Fix self-tests to pass with new introduced checks and Node 18.
+
+## [3.4.6] - 2023-02-08
+### Changed
+- Updated project dependencies to current [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) version.
+
+## [3.4.5] - 2023-01-23
+### Changed
+- Updated project dependencies to current [moodle-local_moodlecheck](https://github.com/moodlehq/moodle-local_moodlecheck) and [moodle-local_ci](https://github.com/moodlehq/moodle-local_ci) versions.
+
+### Fixed
+- Updated to `php-coveralls/php-coveralls` v2 for uploading coverage results to [Coveralls](https://coveralls.io) with the `coveralls-upload` command.
+- ACTION REQUIRED: Review any use of the `coveralls-upload` command in GHA and ensure that `COVERALLS_REPO_TOKEN` is set in the environment. See [Coveralls integration](https://github.com/moodlehq/moodle-plugin-ci/blob/master/docs/CodeCoverage.md#coveralls-integration) for more information.
+
+## [3.4.4] - 2023-01-20
+### Changed
+- Updated to `php-compatibility` dev version. This was needed because the last release is from 2019 and, until a new release is available, it was the only way to get it working with PHP 8.1 and above and some good new Sniffs incorporated.
+
 ## [3.4.3] - 2022-12-24
 ### Changed
 - Updated [gha.dist.yml](https://github.com/moodlehq/moodle-plugin-ci/blob/master/gha.dist.yml) and
@@ -456,7 +493,14 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - `moodle-plugin-ci shifter` command.  Run YUI Shifter on plugin YUI modules.
 - `moodle-plugin-ci csslint` command.  Lints the CSS files in the plugin.
 
-[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.3...master
+[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.10...master
+[3.4.10]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.9...3.4.10
+[3.4.9]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.8...3.4.9
+[3.4.8]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.7...3.4.8
+[3.4.7]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.6...3.4.7
+[3.4.6]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.5...3.4.6
+[3.4.5]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.4...3.4.5
+[3.4.4]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.3...3.4.4
 [3.4.3]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.2...3.4.3
 [3.4.2]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.1...3.4.2
 [3.4.1]: https://github.com/moodlehq/moodle-plugin-ci/compare/3.4.0...3.4.1

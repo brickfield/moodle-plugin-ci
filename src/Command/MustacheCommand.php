@@ -16,7 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Process\ProcessBuilder;
+use Symfony\Component\Process\Process;
 
 /**
  * Lints mustache template files.
@@ -25,7 +25,7 @@ class MustacheCommand extends AbstractMoodleCommand
 {
     use ExecuteTrait;
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -33,13 +33,13 @@ class MustacheCommand extends AbstractMoodleCommand
             ->setDescription('Run Mustache Lint on a plugin');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
         $this->initializeExecute($output, $this->getHelper('process'));
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->outputHeading($output, 'Mustache Lint on %s');
 
@@ -48,7 +48,7 @@ class MustacheCommand extends AbstractMoodleCommand
             return $this->outputSkip($output);
         }
 
-        $linter  = __DIR__.'/../../vendor/moodlehq/moodle-local_ci/mustache_lint/mustache_lint.php';
+        $linter  = __DIR__ . '/../../vendor/moodlehq/moodle-local_ci/mustache_lint/mustache_lint.php';
         $jarFile = $this->resolveJarFile();
 
         // This is a workaround to execute mustache_lint.php file from within a phar.
@@ -58,22 +58,23 @@ class MustacheCommand extends AbstractMoodleCommand
 
         $code = 0;
         foreach ($files as $file) {
+            $cmd = [
+                'env',
+                '-u',
+                // _JAVA_OPTIONS is something Travis CI started to set in Trusty.  This breaks Mustache because
+                // the output from vnu.jar needs to be captured and JSON decoded.  When _JAVA_OPTIONS is present,
+                // then a message like "Picked up _JAVA_OPTIONS..." is printed which breaks JSON decoding.
+                '_JAVA_OPTIONS',
+                'php',
+                $wrapper,
+                '--filename=' . $file,
+                '--validator=' . $jarFile,
+                '--basename=' . $this->moodle->directory,
+            ];
             // _JAVA_OPTIONS is something Travis CI started to set in Trusty.  This breaks Mustache because
             // the output from vnu.jar needs to be captured and JSON decoded.  When _JAVA_OPTIONS is present,
             // then a message like "Picked up _JAVA_OPTIONS..." is printed which breaks JSON decoding.
-            $process = $this->execute->passThroughProcess(
-                ProcessBuilder::create()
-                    ->add('env')
-                    ->add('-u')
-                    ->add('_JAVA_OPTIONS')
-                    ->add('php')
-                    ->add($wrapper)
-                    ->add('--filename='.$file)
-                    ->add('--validator='.$jarFile)
-                    ->add('--basename='.$this->moodle->directory)
-                    ->setTimeout(null)
-                    ->getProcess()
-            );
+            $process = $this->execute->passThroughProcess(new Process($cmd, $this->moodle->directory, null, null, null));
 
             if (!$process->isSuccessful()) {
                 $code = 1;
@@ -88,10 +89,10 @@ class MustacheCommand extends AbstractMoodleCommand
     /**
      * @return string
      */
-    private function resolveJarFile()
+    private function resolveJarFile(): string
     {
         // Check if locally installed.
-        $file = __DIR__.'/../../vendor/moodlehq/moodle-local_ci/node_modules/vnu-jar/build/dist/vnu.jar';
+        $file = __DIR__ . '/../../vendor/moodlehq/moodle-local_ci/node_modules/vnu-jar/build/dist/vnu.jar';
         if (is_file($file)) {
             return realpath($file);
         }
@@ -99,8 +100,13 @@ class MustacheCommand extends AbstractMoodleCommand
         // Check for global install.
         $this->validateJarVersion();
 
-        $process = $this->execute->mustRun('npm -g prefix');
-        $file    = trim($process->getOutput()).'/lib/node_modules/vnu-jar/build/dist/vnu.jar';
+        $cmd = [
+            'npm',
+            '-g',
+            'prefix',
+        ];
+        $process = $this->execute->mustRun($cmd);
+        $file    = trim($process->getOutput()) . '/lib/node_modules/vnu-jar/build/dist/vnu.jar';
 
         if (!is_file($file)) {
             throw new \RuntimeException(sprintf('Failed to find %s', $file));
@@ -109,9 +115,15 @@ class MustacheCommand extends AbstractMoodleCommand
         return $file;
     }
 
-    private function validateJarVersion()
+    private function validateJarVersion(): void
     {
-        $json = json_decode($this->execute->mustRun('npm -g list --json')->getOutput(), true);
+        $cmd = [
+            'npm',
+            '-g',
+            'list',
+            '--json',
+        ];
+        $json = json_decode($this->execute->mustRun($cmd)->getOutput(), true);
         if (!isset($json['dependencies']['vnu-jar']['version'])) {
             throw new \RuntimeException('Failed to find vnu-jar');
         }

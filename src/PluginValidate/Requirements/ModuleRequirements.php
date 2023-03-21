@@ -19,12 +19,12 @@ use MoodlePluginCI\PluginValidate\Finder\FileTokens;
  */
 class ModuleRequirements extends GenericRequirements
 {
-    protected function getLangFile()
+    protected function getLangFile(): string
     {
-        return 'lang/en/'.$this->plugin->name.'.php';
+        return 'lang/en/' . $this->plugin->name . '.php';
     }
 
-    public function getRequiredFiles()
+    public function getRequiredFiles(): array
     {
         return array_merge(parent::getRequiredFiles(), [
             'lib.php',
@@ -35,32 +35,32 @@ class ModuleRequirements extends GenericRequirements
         ]);
     }
 
-    public function getRequiredFunctions()
+    public function getRequiredFunctions(): array
     {
         return [
-            FileTokens::create('lib.php')->mustHave($this->plugin->name.'_add_instance')->mustHave($this->plugin->name.'_update_instance'),
-            FileTokens::create('db/upgrade.php')->mustHave('xmldb_'.$this->plugin->name.'_upgrade'),
+            FileTokens::create('lib.php')->mustHave($this->plugin->name . '_add_instance')->mustHave($this->plugin->name . '_update_instance'),
+            FileTokens::create('db/upgrade.php')->mustHave('xmldb_' . $this->plugin->name . '_upgrade'),
         ];
     }
 
-    public function getRequiredStrings()
+    public function getRequiredStrings(): FileTokens
     {
         return FileTokens::create($this->getLangFile())
             ->mustHaveAny(['modulename', 'pluginname'])
-            ->mustHave($this->plugin->name.':addinstance');
+            ->mustHave($this->plugin->name . ':addinstance');
     }
 
-    public function getRequiredCapabilities()
+    public function getRequiredCapabilities(): FileTokens
     {
-        return FileTokens::create('db/access.php')->mustHave('mod/'.$this->plugin->name.':addinstance');
+        return FileTokens::create('db/access.php')->mustHave('mod/' . $this->plugin->name . ':addinstance');
     }
 
-    public function getRequiredTables()
+    public function getRequiredTables(): FileTokens
     {
         return FileTokens::create('db/install.xml')->mustHave($this->plugin->name);
     }
 
-    public function getRequiredTablePrefix()
+    public function getRequiredTablePrefix(): FileTokens
     {
         return FileTokens::create('db/install.xml')->mustHaveAny([$this->plugin->name, $this->plugin->component]);
     }

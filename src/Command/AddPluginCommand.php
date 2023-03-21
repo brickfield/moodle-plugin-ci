@@ -28,22 +28,15 @@ use Symfony\Component\Process\Process;
 class AddPluginCommand extends Command
 {
     use ExecuteTrait;
+    private string $envFile;
 
-    /**
-     * @var string
-     */
-    private $envFile;
-
-    /**
-     * @param string $envFile
-     */
-    public function __construct($envFile)
+    public function __construct(string $envFile)
     {
         parent::__construct();
         $this->envFile = $envFile;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('add-plugin')
             ->setDescription('Queue up an additional plugin to be installed in the test site')
@@ -54,12 +47,12 @@ class AddPluginCommand extends Command
             ->addOption('storage', null, InputOption::VALUE_REQUIRED, 'Plugin storage directory', 'moodle-plugin-ci-plugins');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->initializeExecute($output, $this->getHelper('process'));
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $validate   = new Validate();
         $filesystem = new Filesystem();
@@ -73,7 +66,6 @@ class AddPluginCommand extends Command
             throw new \InvalidArgumentException('Cannot use both the project argument and the --clone option');
         }
         if (!empty($project)) {
-            /** @psalm-suppress PossiblyInvalidArgument */
             $token = ($token !== null) ? $token . '@' : '';
             $cloneUrl = sprintf('https://%sgithub.com/%s.git', $token, $project);
         } elseif (!empty($clone)) {
@@ -85,13 +77,31 @@ class AddPluginCommand extends Command
         $filesystem->mkdir($storage);
         $storageDir = realpath($validate->directory($storage));
 
-        $branch   = $branch !== null ? '--branch '.$branch : '';
-        /** @psalm-suppress PossiblyInvalidArgument */
-        $cloneUrl = sprintf('git clone --depth 1 %s %s', $branch, $cloneUrl);
-        $process  = new Process($cloneUrl, $storageDir);
-        $this->execute->mustRun($process);
+        $branchCmd = [];
+        if (null !== $branch) {
+            $branchCmd = [
+                    '--branch',
+                    $branch,
+                ];
+        }
+
+        $cloneCmd = array_merge(
+            [
+                'git',
+                'clone',
+                '--depth',
+                '1',
+            ],
+            $branchCmd,
+            [
+                $cloneUrl,
+            ]
+        );
+        $process  = $this->execute->mustRun(new Process($cloneCmd, $storageDir, null, null, null));
 
         $dumper = new EnvDumper();
         $dumper->dump(['EXTRA_PLUGINS_DIR' => $storageDir], $this->envFile);
+
+        return $process->isSuccessful() ? 0 : 1;
     }
 }

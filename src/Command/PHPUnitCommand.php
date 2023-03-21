@@ -23,7 +23,7 @@ class PHPUnitCommand extends AbstractMoodleCommand
 {
     use ExecuteTrait;
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -40,13 +40,13 @@ class PHPUnitCommand extends AbstractMoodleCommand
             ->addOption('fail-on-warning', null, InputOption::VALUE_NONE, 'Treat tests with warnings as failures');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
         $this->initializeExecute($output, $this->getHelper('process'));
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->outputHeading($output, 'PHPUnit tests for %s');
 
@@ -54,13 +54,17 @@ class PHPUnitCommand extends AbstractMoodleCommand
             return $this->outputSkip($output, 'No PHPUnit tests to run, free pass!');
         }
 
-        $colors  = $output->isDecorated() ? '--colors="always"' : '';
-        $binary  = $this->resolveBinary($input, $output);
-        $options = $this->resolveOptions($input);
-        $process = $this->execute->passThrough(
-            sprintf('%s%s/vendor/bin/phpunit %s %s', $binary, $this->moodle->directory, $colors, $options),
-            $this->moodle->directory
+        $binary    = $this->resolveBinary($input, $output);
+        $directory = [$this->moodle->directory . '/vendor/bin/phpunit'];
+        $colors    = $output->isDecorated() ? ['--colors=always'] : [];
+        $options   = $this->resolveOptions($input);
+        $cmd       = array_merge(
+            $binary,
+            $directory,
+            $colors,
+            $options,
         );
+        $process = $this->execute->passThrough($cmd, $this->moodle->directory);
 
         return $process->isSuccessful() ? 0 : 1;
     }
@@ -70,32 +74,47 @@ class PHPUnitCommand extends AbstractMoodleCommand
      *
      * @param InputInterface $input
      *
-     * @return string
+     * @return string[]
      */
-    private function resolveOptions(InputInterface $input)
+    private function resolveOptions(InputInterface $input): array
     {
         $options = [];
         if ($this->supportsCoverage() && $input->getOption('coverage-text')) {
-            $options[] = '--coverage-text';
+            $options[] = [
+                '--coverage-text',
+            ];
         }
         if ($this->supportsCoverage() && $input->getOption('coverage-clover')) {
-            $options[] = sprintf('--coverage-clover %s/coverage.xml', getcwd());
+            $options[] = [
+                '--coverage-clover',
+                getcwd() . '/coverage.xml',
+            ];
         }
         if ($input->getOption('verbose')) {
-            $options[] = '--verbose';
+            $options[] = [
+                '--verbose',
+            ];
         }
-        foreach (['fail-on-warning', 'fail-on-risky', 'fail-on-skipped', 'fail-on-warning'] as $option) {
+        foreach (['fail-on-incomplete', 'fail-on-risky', 'fail-on-skipped', 'fail-on-warning'] as $option) {
             if ($input->getOption($option)) {
-                $options[] = '--'.$option;
+                $options[] = [
+                    '--' . $option,
+                ];
             }
         }
-        if (is_file($this->plugin->directory.'/phpunit.xml')) {
-            $options[] = sprintf('--configuration %s', $this->plugin->directory);
+        if (is_file($this->plugin->directory . '/phpunit.xml')) {
+            $options[] = [
+                '--configuration',
+                $this->plugin->directory,
+            ];
         } else {
-            $options[] = sprintf('--testsuite %s_testsuite', $this->plugin->getComponent());
+            $options[] = [
+                '--testsuite',
+                $this->plugin->getComponent(),
+            ];
         }
 
-        return implode(' ', $options);
+        return array_merge(...$options); // Merge all options into a single array.
     }
 
     /**
@@ -104,30 +123,48 @@ class PHPUnitCommand extends AbstractMoodleCommand
      * @param InputInterface  $input
      * @param OutputInterface $output
      *
-     * @return string
+     * @return string[]
      */
-    private function resolveBinary(InputInterface $input, OutputInterface $output)
+    private function resolveBinary(InputInterface $input, OutputInterface $output): array
     {
         if (!$this->supportsCoverage()) {
-            return '';
+            return [];
         }
         if (!$input->getOption('coverage-text') && !$input->getOption('coverage-clover')) {
-            return '';
+            return [];
         }
 
         // Depending on the coverage driver, selected return different values.
         switch ($this->resolveCoverageDriver($input, $output)) {
-            case 'pcov':
-                return 'php -dxdebug.mode=off -dpcov.enabled=1 -dpcov.directory=. '; // Enable pcov, disable xdebug, just in case.
-            case 'xdebug':
-                return 'php -dpcov.enabled=0 -dxdebug.mode=coverage '; // Enable xdebug, disable pcov, just in case.
+            case 'pcov': // Enable pcov, disable xdebug, just in case.
+                return [
+                    'php',
+                    '-dxdebug.mode=off',
+                    '-dpcov.enabled=1',
+                    '-dpcov.directory=.',
+                ];
+            case 'xdebug': // Enable xdebug, disable pcov, just in case.
+                return [
+                    'php',
+                    '-dpcov.enabled=0',
+                    '-dxdebug.mode=coverage',
+                ];
             case 'phpdbg':
-                return 'phpdbg -d memory_limit=-1 -qrr ';
+                return [
+                    'phpdbg',
+                    '-d',
+                    'memory_limit=-1',
+                    '-qrr',
+                ];
         }
         // No suitable coverage driver found, disabling all candidates.
         $output->writeln('<error>No suitable driver found, disabling code coverage.</error>');
 
-        return 'php -dpcov.enabled=0 -dxdebug.mode=off ';
+        return [
+            'php',
+            '-dpcov.enabled=0',
+            '-dxdebug.mode=off',
+        ];
     }
 
     /**
@@ -135,7 +172,7 @@ class PHPUnitCommand extends AbstractMoodleCommand
      *
      * @return bool
      */
-    private function supportsCoverage()
+    private function supportsCoverage(): bool
     {
         return version_compare(PHP_VERSION, '7.0.0', '>=');
     }
@@ -148,7 +185,7 @@ class PHPUnitCommand extends AbstractMoodleCommand
      *
      * @return string one of pcov, xdebug, phpdbg
      */
-    private function resolveCoverageDriver(InputInterface $input, OutputInterface $output)
+    private function resolveCoverageDriver(InputInterface $input, OutputInterface $output): string
     {
         // Let's see if any of the coverage drivers has been forced via command line options.
         if ($input->getOption('coverage-pcov')) {

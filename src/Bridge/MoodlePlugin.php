@@ -31,46 +31,36 @@ class MoodlePlugin
 {
     /**
      * Absolute path to a Moodle plugin.
-     *
-     * @var string
      */
-    public $directory;
+    public string $directory;
 
     /**
      * The context in which we are running.
      *
-     * EG: this is the command name and it should only
+     * EG: this is the command name, and it should only
      * be used for reading configs.
-     *
-     * @var string|null
      */
-    public $context = '';
+    public ?string $context = '';
 
     /**
      * Cached component string.
-     *
-     * @var string
      */
-    protected $component;
+    protected string $component;
 
     /**
      * Cached dependencies.
-     *
-     * @var array
      */
-    protected $dependencies;
+    protected array $dependencies;
 
     /**
      * Cached subplugin types.
-     *
-     * @var string[]
      */
-    protected $subpluginTypes;
+    protected array $subpluginTypes;
 
     /**
      * @param string $directory Absolute path to a Moodle plugin
      */
-    public function __construct($directory)
+    public function __construct(string $directory)
     {
         $this->directory = $directory;
     }
@@ -82,7 +72,7 @@ class MoodlePlugin
      *
      * @return string
      */
-    public function getComponent()
+    public function getComponent(): string
     {
         // Simple cache.
         if (!empty($this->component)) {
@@ -93,7 +83,7 @@ class MoodlePlugin
         $parser = new CodeParser();
 
         $notFound   = 'The plugin must define the $plugin->component in the version.php file.';
-        $statements = $parser->parseFile($this->directory.'/version.php');
+        $statements = $parser->parseFile($this->directory . '/version.php');
 
         try {
             $assign = $filter->findFirstPropertyFetchAssignment($statements, 'plugin', 'component', $notFound);
@@ -114,10 +104,10 @@ class MoodlePlugin
      *
      * @return array
      */
-    public function getDependencies()
+    public function getDependencies(): array
     {
         // Simple cache.
-        if (is_array($this->dependencies)) {
+        if (isset($this->dependencies)) {
             return $this->dependencies;
         }
         $this->dependencies = [];
@@ -125,7 +115,7 @@ class MoodlePlugin
         $filter = new StatementFilter();
         $parser = new CodeParser();
 
-        $statements = $parser->parseFile($this->directory.'/version.php');
+        $statements = $parser->parseFile($this->directory . '/version.php');
 
         try {
             $assign = $filter->findFirstPropertyFetchAssignment($statements, 'plugin', 'dependencies');
@@ -150,15 +140,15 @@ class MoodlePlugin
      *
      * @return string[]
      */
-    public function getSubpluginTypes()
+    public function getSubpluginTypes(): array
     {
         // Simple cache.
-        if (is_array($this->subpluginTypes)) {
+        if (isset($this->subpluginTypes)) {
             return $this->subpluginTypes;
         }
         $this->subpluginTypes = [];
 
-        $subpluginsJsonLocation = $this->directory.'/db/subplugins.json';
+        $subpluginsJsonLocation = $this->directory . '/db/subplugins.json';
         if (file_exists($subpluginsJsonLocation)) {
             $subpluginData = json_decode(file_get_contents($subpluginsJsonLocation));
             if ($subpluginData && property_exists($subpluginData, 'plugintypes')) {
@@ -174,7 +164,7 @@ class MoodlePlugin
      *
      * @return bool
      */
-    public function hasUnitTests()
+    public function hasUnitTests(): bool
     {
         $result = Finder::create()->files()->in($this->directory)->path('tests')->name('*_test.php')->count();
 
@@ -186,7 +176,7 @@ class MoodlePlugin
      *
      * @return bool
      */
-    public function hasBehatFeatures()
+    public function hasBehatFeatures(): bool
     {
         $result = Finder::create()->files()->in($this->directory)->path('tests/behat')->name('*.feature')->count();
 
@@ -200,7 +190,7 @@ class MoodlePlugin
      *
      * @return bool
      */
-    public function hasFilesWithName($pattern)
+    public function hasFilesWithName($pattern): bool
     {
         $result = $this->getFiles(Finder::create()->name($pattern));
 
@@ -212,9 +202,9 @@ class MoodlePlugin
      *
      * @return bool
      */
-    public function hasNodeDependencies()
+    public function hasNodeDependencies(): bool
     {
-        return is_file($this->directory.'/package.json');
+        return is_file($this->directory . '/package.json');
     }
 
     /**
@@ -222,9 +212,9 @@ class MoodlePlugin
      *
      * @return array
      */
-    public function getThirdPartyLibraryPaths()
+    public function getThirdPartyLibraryPaths(): array
     {
-        $xmlFile = $this->directory.'/thirdpartylibs.xml';
+        $xmlFile = $this->directory . '/thirdpartylibs.xml';
         if (!is_file($xmlFile)) {
             return [];
         }
@@ -238,9 +228,9 @@ class MoodlePlugin
      *
      * @return array
      */
-    public function getIgnores()
+    public function getIgnores(): array
     {
-        $configFile = $this->directory.'/.moodle-plugin-ci.yml';
+        $configFile = $this->directory . '/.moodle-plugin-ci.yml';
 
         if (!is_file($configFile)) {
             return [];
@@ -249,8 +239,8 @@ class MoodlePlugin
         $config = Yaml::parse(file_get_contents($configFile));
 
         // Search for context (AKA command) specific filter first.
-        if (!empty($this->context) && array_key_exists('filter-'.$this->context, $config)) {
-            return $config['filter-'.$this->context];
+        if (!empty($this->context) && array_key_exists('filter-' . $this->context, $config)) {
+            return $config['filter-' . $this->context];
         }
 
         return array_key_exists('filter', $config) ? $config['filter'] : [];
@@ -263,7 +253,7 @@ class MoodlePlugin
      *
      * @return array Of files
      */
-    public function getFiles(Finder $finder)
+    public function getFiles(Finder $finder): array
     {
         $finder->files()->in($this->directory)->ignoreUnreadableDirs();
 
@@ -302,11 +292,11 @@ class MoodlePlugin
      *
      * @return array Of files
      */
-    public function getRelativeFiles(Finder $finder)
+    public function getRelativeFiles(Finder $finder): array
     {
         $files = [];
         foreach ($this->getFiles($finder) as $file) {
-            $files[] = str_replace($this->directory.'/', '', $file);
+            $files[] = str_replace($this->directory . '/', '', $file);
         }
 
         return $files;

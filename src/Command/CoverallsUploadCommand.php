@@ -25,7 +25,7 @@ class CoverallsUploadCommand extends AbstractPluginCommand
 {
     use ExecuteTrait;
 
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -34,30 +34,49 @@ class CoverallsUploadCommand extends AbstractPluginCommand
             ->addOption('coverage-file', null, InputOption::VALUE_REQUIRED, 'Location of the Clover XML file to upload', './coverage.xml');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
         $this->initializeExecute($output, $this->getHelper('process'));
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $coverage = realpath($input->getOption('coverage-file'));
         if ($coverage === false) {
-            /** @psalm-suppress PossiblyInvalidArgument */
             $message = sprintf('Did not find coverage file at <info>%s</info>', $input->getOption('coverage-file'));
             $output->writeln($message);
 
             return 0;
         }
 
-        $process = new Process('composer create-project -n --no-dev --prefer-dist satooshi/php-coveralls _php_coveralls ^1', $this->plugin->directory);
-        $this->execute->mustRun($process);
-
         $filesystem = new Filesystem();
-        $filesystem->copy($coverage, $this->plugin->directory.'/build/logs/clover.xml');
 
-        $process = $this->execute->passThrough('_php_coveralls/bin/coveralls -v', $this->plugin->directory);
+        // Only if it has not been installed before.
+        if (!$filesystem->exists($this->plugin->directory . '/coveralls')) {
+            $cmd = [
+                'composer',
+                'create-project',
+                '-n',
+                '--no-dev',
+                '--prefer-dist',
+                'php-coveralls/php-coveralls',
+                'coveralls',
+                '^2',
+            ];
+            $process = new Process($cmd, $this->plugin->directory);
+            $this->execute->mustRun($process);
+        }
+
+        // Yes, this is a hack, but it's the only way to get the coverage file into the right place
+        // for the coveralls command to find it.
+        $filesystem->copy($coverage, $this->plugin->directory . '/build/logs/clover.xml');
+
+        $cmd = [
+            'coveralls/bin/php-coveralls',
+            '-v',
+        ];
+        $process = $this->execute->passThrough($cmd, $this->plugin->directory);
 
         return $process->isSuccessful() ? 0 : 1;
     }

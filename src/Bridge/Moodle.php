@@ -23,30 +23,26 @@ class Moodle
 {
     /**
      * Absolute path to Moodle directory.
-     *
-     * @var string
      */
-    public $directory;
+    public string $directory;
 
     /**
-     * Moodle's config.
-     *
-     * @var object
+     * Moodle config.
      */
-    protected $cfg;
+    protected ?object $cfg;
 
     /**
      * @param string $directory Absolute path to Moodle directory
      */
-    public function __construct($directory)
+    public function __construct(string $directory)
     {
         $this->directory = $directory;
     }
 
     /**
-     * Load's Moodle config so we can use Moodle APIs.
+     * Load Moodle config so we can use Moodle APIs.
      */
-    public function requireConfig()
+    public function requireConfig(): void
     {
         global $CFG;
 
@@ -63,7 +59,7 @@ class Moodle
             // Need this since Moodle will not be fully installed.
             define('ABORT_AFTER_CONFIG', true);
         }
-        $path = $this->directory.'/config.php';
+        $path = $this->directory . '/config.php';
 
         if (!is_file($path)) {
             throw new \RuntimeException('Failed to find Moodle config file');
@@ -72,7 +68,7 @@ class Moodle
         /** @noinspection PhpIncludeInspection */
         require_once $path;
 
-        // Save a local reference to Moodle's config.
+        // Save a local reference to Moodle config.
         if (empty($this->cfg)) {
             $this->cfg = $CFG;
         }
@@ -85,7 +81,7 @@ class Moodle
      *
      * @return array
      */
-    public function normalizeComponent($component)
+    public function normalizeComponent(string $component): array
     {
         $this->requireConfig();
 
@@ -100,11 +96,12 @@ class Moodle
      *
      * @return string Absolute path, EG: /path/to/mod/forum
      */
-    public function getComponentInstallDirectory($component)
+    public function getComponentInstallDirectory(string $component): string
     {
         list($type, $name) = $this->normalizeComponent($component);
 
         // Must use reflection to avoid using static cache.
+        /* @noinspection PhpUndefinedClassInspection */
         $method = new \ReflectionMethod(\core_component::class, 'fetch_plugintypes');
         $method->setAccessible(true);
         $result = $method->invoke(null);
@@ -113,7 +110,7 @@ class Moodle
             throw new \InvalidArgumentException(sprintf('The component %s has an unknown plugin type of %s', $component, $type));
         }
 
-        return $result[0][$type].'/'.$name;
+        return $result[0][$type] . '/' . $name;
     }
 
     /**
@@ -121,12 +118,12 @@ class Moodle
      *
      * @return int
      */
-    public function getBranch()
+    public function getBranch(): int
     {
         $filter = new StatementFilter();
         $parser = new CodeParser();
 
-        $statements = $parser->parseFile($this->directory.'/version.php');
+        $statements = $parser->parseFile($this->directory . '/version.php');
         $assign     = $filter->findFirstVariableAssignment($statements, 'branch', 'Failed to find $branch in Moodle version.php');
 
         if ($assign->expr instanceof String_) {
@@ -143,11 +140,11 @@ class Moodle
      *
      * @return string
      */
-    public function getConfig($name)
+    public function getConfig(string $name): string
     {
         $this->requireConfig();
 
-        if (!property_exists($this->cfg, $name)) {
+        if (null === $this->cfg || !property_exists($this->cfg, $name)) {
             throw new \RuntimeException(sprintf('Failed to find $CFG->%s in Moodle config file', $name));
         }
 

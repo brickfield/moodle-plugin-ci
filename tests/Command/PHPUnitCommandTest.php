@@ -21,7 +21,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class PHPUnitCommandTest extends MoodleTestCase
 {
-    protected function executeCommand($pluginDir = null, $moodleDir = null)
+    protected function executeCommand($pluginDir = null, $moodleDir = null): CommandTester
     {
         if ($pluginDir === null) {
             $pluginDir = $this->pluginDir;
@@ -54,22 +54,22 @@ class PHPUnitCommandTest extends MoodleTestCase
     public function testExecuteNoTests()
     {
         $fs = new Filesystem();
-        $fs->remove($this->pluginDir.'/tests/lib_test.php');
+        $fs->remove($this->pluginDir . '/tests/lib_test.php');
 
         $commandTester = $this->executeCommand();
         $this->assertSame(0, $commandTester->getStatusCode());
-        $this->assertRegExp('/No PHPUnit tests to run, free pass!/', $commandTester->getDisplay());
+        $this->assertMatchesRegularExpression('/No PHPUnit tests to run, free pass!/', $commandTester->getDisplay());
     }
 
     public function testExecuteNoPlugin()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->executeCommand($this->moodleDir.'/no/plugin');
+        $this->executeCommand($this->moodleDir . '/no/plugin');
     }
 
     public function testExecuteNoMoodle()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->executeCommand($this->moodleDir.'/no/moodle');
+        $this->executeCommand($this->moodleDir . '/no/moodle');
     }
 }

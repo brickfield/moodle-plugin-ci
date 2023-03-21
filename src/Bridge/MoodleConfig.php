@@ -20,7 +20,7 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class MoodleConfig
 {
-    const PLACEHOLDER = '// Extra config.';
+    public const PLACEHOLDER = '// Extra config.';
 
     /**
      * Create a Moodle config.
@@ -30,9 +30,9 @@ class MoodleConfig
      *
      * @return string
      */
-    public function createContents(AbstractDatabase $database, $dataDir)
+    public function createContents(AbstractDatabase $database, string $dataDir): string
     {
-        $template  = file_get_contents(__DIR__.'/../../res/template/config.php.txt');
+        $template  = file_get_contents(__DIR__ . '/../../res/template/config.php.txt');
         $variables = [
             '{{DBTYPE}}'          => $database->type,
             '{{DBLIBRARY}}'       => $database->library,
@@ -43,9 +43,9 @@ class MoodleConfig
             '{{DBPASS}}'          => $database->pass,
             '{{WWWROOT}}'         => 'http://localhost/moodle',
             '{{DATAROOT}}'        => $dataDir,
-            '{{PHPUNITDATAROOT}}' => $dataDir.'/phpu_moodledata',
-            '{{BEHATDATAROOT}}'   => $dataDir.'/behat_moodledata',
-            '{{BEHATDUMP}}'       => $dataDir.'/behat_dump',
+            '{{PHPUNITDATAROOT}}' => $dataDir . '/phpu_moodledata',
+            '{{BEHATDATAROOT}}'   => $dataDir . '/behat_moodledata',
+            '{{BEHATDUMP}}'       => $dataDir . '/behat_dump',
             '{{BEHATWWWROOT}}'    => getenv('MOODLE_BEHAT_WWWROOT') ?: 'http://localhost:8000',
             '{{BEHATWDHOST}}'     => getenv('MOODLE_BEHAT_WDHOST') ?: 'http://localhost:4444/wd/hub',
             '{{EXTRACONFIG}}'     => self::PLACEHOLDER,
@@ -62,13 +62,13 @@ class MoodleConfig
      *
      * @return string
      */
-    public function injectLine($contents, $lineToAdd)
+    public function injectLine(string $contents, string $lineToAdd): string
     {
         if (strpos($contents, self::PLACEHOLDER) === false) {
             throw new \RuntimeException('Failed to find placeholder in config file, file might be malformed');
         }
 
-        return str_replace(self::PLACEHOLDER, $lineToAdd."\n".self::PLACEHOLDER, $contents);
+        return str_replace(self::PLACEHOLDER, $lineToAdd . "\n" . self::PLACEHOLDER, $contents);
     }
 
     /**
@@ -78,7 +78,7 @@ class MoodleConfig
      *
      * @return string
      */
-    public function read($file)
+    public function read(string $file): string
     {
         if (!file_exists($file)) {
             throw new \InvalidArgumentException('Failed to find Moodle config.php file, perhaps Moodle has not been installed yet');
@@ -100,7 +100,7 @@ class MoodleConfig
      * @param string $file     File path
      * @param string $contents Config file contents
      */
-    public function dump($file, $contents)
+    public function dump(string $file, string $contents): void
     {
         $filesystem = new Filesystem();
         $filesystem->dumpFile($file, $contents);

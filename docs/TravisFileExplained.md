@@ -11,6 +11,9 @@ see [Travis CI's documentation](http://docs.travis-ci.com/user/getting-started/)
 # This is the language of our project.
 language: php
 
+# Note that focal (20.04) is the minimum because Node 18 requires it.
+dist: focal
+
 # Installs the updated version of PostgreSQL and extra APT packages.
 addons:
   postgresql: "13"
@@ -34,9 +37,9 @@ cache:
 # listed here will create a separate build and run the tests against that
 # version of PHP.
 php:
- - 7.3
  - 7.4
  - 8.0
+ - 8.1
 
 # This section sets up the environment variables for the build.
 env:
@@ -86,13 +89,16 @@ before_install:
 - if [[ ${TRAVIS_PHP_VERSION:0:1} -gt 7 ]]; then pecl install xmlrpc-beta; fi
 # Setup a good default max_input_vars value for all runs.
 - echo 'max_input_vars=5000' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
-# This disables XDebug which should speed up the build.
+# We remove xdebug by default for performance, because we're not checking code coverage.
+# If you want to use xdebug for code coverage, remove this line.
   - phpenv config-rm xdebug.ini
+# To use pcov for code coverage on Moodle 3.10 and up, install it using:
+# - pecl install pcov
 # Currently we are inside of the clone of your repository.  We move up two
 # directories to build the project.
   - cd ../..
 # Install this project into a directory called "ci".
-  - composer create-project -n --no-dev --prefer-dist moodlehq/plugin-ci ci ^3
+  - composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^3
 # Update the $PATH so scripts from this project can be called easily.
   - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
 
@@ -128,7 +134,7 @@ script:
 # conforms to the Moodle coding standards.  It is highly recommended
 # that you keep this step.
 # To fail on warnings use --max-warnings 0
-  - moodle-plugin-ci codechecker
+  - moodle-plugin-ci phpcs
 # This step runs Moodle PHPDoc checker on your plugin.
   - moodle-plugin-ci phpdoc
 # This step runs some light validation on the plugin file structure
