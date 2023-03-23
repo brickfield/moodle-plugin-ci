@@ -112,8 +112,9 @@ class PluginInstaller extends AbstractInstaller
 
         $directory = $this->moodle->getComponentInstallDirectory($plugin->getComponent());
 
+        // We will allow replacing an existing Moodle plugin as well.
         if (is_dir($directory)) {
-//            throw new \RuntimeException('Plugin is already installed in standard Moodle');
+            $this->getOutput()->info(sprintf('Overwriting existing plugin'));
         }
 
         $this->getOutput()->info(sprintf('Copying plugin from %s to %s', $plugin->directory, $directory));
