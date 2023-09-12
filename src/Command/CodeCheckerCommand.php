@@ -121,6 +121,7 @@ class CodeCheckerCommand extends AbstractPluginCommand
 
         // Add the files to process.
         foreach ($files as $file) {
+            $this->outputHeading($file, "Adding file %s");
             $cmd[] = $file;
         }
 
