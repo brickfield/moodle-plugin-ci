@@ -120,10 +120,12 @@ class CodeCheckerCommand extends AbstractPluginCommand
         array_push($cmd, '--runtime-set', 'moodleTodoCommentRegex', $todoCommentRegex);
 
         // Add the files to process.
+        $output->writeln(sprintf('Number of files requested %d', count($files)));
         foreach ($files as $file) {
             $output->writeln(sprintf('Adding file %s', $file));
             $cmd[] = $file;
         }
+        $output->writeln(sprintf('Number of files loaded %d', count($cmd)));
 
         $process = $this->execute->passThroughProcess(new Process($cmd, $this->plugin->directory, null, null, null));
 
