@@ -80,9 +80,9 @@ class AddPluginCommand extends Command
         $branchCmd = [];
         if (null !== $branch) {
             $branchCmd = [
-                    '--branch',
-                    $branch,
-                ];
+                '--branch',
+                $branch,
+            ];
         }
 
         $cloneCmd = array_merge(
