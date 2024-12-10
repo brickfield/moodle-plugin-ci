@@ -4,17 +4,59 @@ title: Change log
 ---
 
 All notable changes to this project will be documented in this file.
-This project adheres to [Semantic Versioning](http://semver.org/).
+This project adheres to [Semantic Versioning](https://semver.org/).
 
-The format of this change log follows the advice given at [Keep a CHANGELOG](http://keepachangelog.com).
+The format of this change log follows the advice given at [Keep a CHANGELOG](https://keepachangelog.com).
 
 ## [Unreleased]
+## [4.5.5] - 2024-11-06
+### Added
+- Improvements to plugin validation implementation:
+    `getRequiredFunctionCalls` in plugin type specific `Requirements` class can be used to validate that file contains function call.
+    `FileTokens::notFoundHint` can be used to give some context for validation error to improve developer experience.
+
+### Fixed
+- Fixed stylelinting error in non-theme plugins containing scss.
+- Updated filter plugin validation requirements to comply with Moodle 4.5
+
+### Removed
+- Stylelint less component task (`grunt stylelint:less`) has been deprecated in
+  Moodle 3.7.
+
+## [4.5.4] - 2024-08-23
+### Changed
+- Fixed nvm loading issue caused by upstream regression.
+
+## [4.5.3] - 2024-07-05
+### Added
+- Support for version 4.4 of the app, that uses new defaults and Chrome (Selenium 4) version.
+
+### Changed
+- Updated project dependencies to current [moodle-cs v3.4.10](https://github.com/moodlehq/moodle-cs) and [moodle-local_ci v1.0.31](https://github.com/moodlehq/moodle-local_ci) releases.
+
+## [4.5.2] - 2024-06-19
+### Changed
+- Updated project dependencies to current [moodle-cs v3.4.9](https://github.com/moodlehq/moodle-cs) release.
+
+## [4.5.1] - 2024-06-14
+### Changed
+- Updated project dependencies to current [moodle-cs v3.4.8](https://github.com/moodlehq/moodle-cs) release.
+
+### Fixed
+- Fixed a problem with the `grunt` command running the `stylelint` tasks against the whole Moodle directory (including both core and other optional plugins installed). Now only the plugin being checked is effectively analysed.
+
+## [4.5.0] - 2024-06-03
+### Changed
+- Updated project dependencies to current [moodle-cs v3.4.7](https://github.com/moodlehq/moodle-cs) and [moodle-local_ci v1.0.30](https://github.com/moodlehq/moodle-local_ci) releases.
+- Internal, various improvements to self testing.
+
 ### Deprecated
 - The use of `phpdbg` to calculate PHPUnit's code-coverage has been deprecated in this `moodle-plugin-ci` release (4.5.0) and will be removed in 5.0.0. This includes both the implicit (default) option when no alternative (`pcov` or `xdebug`) is available and the explicit `--coverage-phpdbg` option.
 - ACTION SUGGESTED: In order to avoid deprecation warnings or annotations, proceed to ensure that either `pcov` (Moodle 3.10 and up) or `xdebug` are available and they will be used automatically. Note that any use of `phpdbg` will throw an error in the next major release (5.0.0).
 
 ### Fixed
 - Solved a problem with the validation of `dataformat` plugin lang strings.
+- Fixed a problem with the `phpcs` command returning with success when some (configuration, installation, ...) problem was causing it not to be executed at all.
 
 ## [4.4.5] - 2024-04-03
 ### Changed
@@ -701,7 +743,15 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - `moodle-plugin-ci shifter` command.  Run YUI Shifter on plugin YUI modules.
 - `moodle-plugin-ci csslint` command.  Lints the CSS files in the plugin.
 
-[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.3...main
+[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.5...main
+[4.5.5]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.4...4.5.5
+[4.5.4]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.3...4.5.4
+[4.5.3]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.2...4.5.3
+[4.5.2]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.1...4.5.2
+[4.5.1]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.0...4.5.1
+[4.5.0]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.5...4.5.0
+[4.4.5]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.4...4.4.5
+[4.4.4]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.3...4.4.4
 [4.4.3]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.2...4.4.3
 [4.4.2]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.1...4.4.2
 [4.4.1]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.4.0...4.4.1

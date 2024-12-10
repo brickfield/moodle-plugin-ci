@@ -1,5 +1,5 @@
 {
-  "name": "brickfield/moodle-plugin-ci",
+  "name": "moodlehq/moodle-plugin-ci",
   "description": "Helps running Moodle plugins analysis checks and tests under various CI environments.",
   "keywords": ["moodle", "travis", "ci", "testing", "github", "actions"],
   "type": "project",
@@ -55,8 +55,8 @@
   ],
   "require": {
     "php": ">=7.4",
-    "moodlehq/moodle-cs": "^3.4.6",
-    "moodlehq/moodle-local_ci": "^1.0.29",
+    "moodlehq/moodle-cs": "^3.4.10",
+    "moodlehq/moodle-local_ci": "^1.0.31",
     "moodlehq/moodle-local_moodlecheck": "^1.3.2",
     "sebastian/phpcpd": "^6.0.3",
     "sebastian/version": "^3.0.2",
@@ -73,13 +73,13 @@
     "psr/log": "^1.1.4",
     "nikic/php-parser": "^4.14",
     "marcj/topsort": "^2.0.0",
-    "phpcompatibility/php-compatibility": "dev-develop#e5cd2e24",
+    "phpcompatibility/php-compatibility": "dev-develop#96072c30",
     "laravel-zero/phar-updater": "^1.0.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.6",
     "mockery/mockery": "^1.5.0",
-    "friendsofphp/php-cs-fixer": "^3.52.1",
+    "friendsofphp/php-cs-fixer": "^3.59.3",
     "vimeo/psalm": "5.19.*"
   },
   "config": {

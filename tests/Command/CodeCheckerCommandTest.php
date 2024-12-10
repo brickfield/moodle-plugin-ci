@@ -97,7 +97,7 @@ EOT;
         $this->assertMatchesRegularExpression('/E\.* 10\.* \/ 10 \(100%\)/', $output);                // Progress.
         $this->assertMatchesRegularExpression('/\/fixable.php/', $output);                            // File.
         $this->assertMatchesRegularExpression('/ 11 ERRORS AND 1 WARNING AFFECTING 8 /', $output);    // Summary.
-        $this->assertMatchesRegularExpression('/moodle\.Files\.BoilerplateComment\.Wrong/', $output); // Moodle sniff.
+        $this->assertMatchesRegularExpression('/BoilerplateComment\.NoBoilerplateComment/', $output); // Moodle sniff.
         $this->assertMatchesRegularExpression('/Expected MOODLE_INTERNAL check/', $output);           // Moodle sniff.
         $this->assertMatchesRegularExpression('/print_error\(\) has been deprecated/', $output);      // Moodle sniff.
         $this->assertMatchesRegularExpression('/Usage of ELSEIF not allowed; use ELSE IF/', $output); // Squiz sniff.
@@ -109,7 +109,7 @@ EOT;
         $this->assertMatchesRegularExpression('/AbstractPrivateMethods\.Found/', $output);    // PHPCompatibility sniff.
         $this->assertMatchesRegularExpression('/Opening brace must be the last content/', $output);   // Generic sniff.
         $this->assertMatchesRegularExpression('/Files\.EndFileNewline\.NotFound/', $output);          // Generic of file.
-        $this->assertMatchesRegularExpression('/PHPCBF CAN FIX THE 3 MARKED SNIFF/', $output);        // PHPCBF note.
+        $this->assertMatchesRegularExpression('/PHPCBF CAN FIX THE 4 MARKED SNIFF/', $output);        // PHPCBF note.
         $this->assertMatchesRegularExpression('/Time:.*Memory:/', $output);                           // Time.
 
         // Also verify display info is correct.
@@ -323,5 +323,44 @@ EOT;
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->executeCommand('/path/to/no/plugin');
+    }
+
+    /**
+     * Data provider for testCommandFailedSomethingIsWrong.
+     *
+     * @return array of options to use for the command, all them known to fail
+     */
+    public function commandFailedSomethingIsWrongProvider()
+    {
+        return [
+            'default' => [
+                ['--standard' => 'chocolate', '--max-warnings' => -1],
+                'ERROR: the "chocolate" coding standard is not installed',
+            ],
+            'zero' => [
+                ['--standard' => 'chocolate', '--max-warnings' => 0],
+                'ERROR: the "chocolate" coding standard is not installed',
+            ],
+            'positive' => [
+                ['--standard' => 'chocolate', '--max-warnings' => 1],
+                'ERROR: the "chocolate" coding standard is not installed',
+            ],
+        ];
+    }
+
+    /**
+     * Verify that if anything goes wrong, the command fails, no matter the max-warnings.
+     *
+     * @param array  $options configuration to use for the command
+     * @param string $output  Expected output (substring matching is enough)
+     *
+     * @dataProvider commandFailedSomethingIsWrongProvider
+     */
+    public function testCommandFailedSomethingIsWrong(array $options, string $output)
+    {
+        // Verify that with incorrect configurations we are getting the command always failed.
+        $commandTester = $this->executeCommand($this->pluginDir, $options);
+        $this->assertSame(1, $commandTester->getStatusCode());
+        $this->assertStringContainsString($output, $commandTester->getDisplay());
     }
 }

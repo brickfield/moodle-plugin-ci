@@ -33,7 +33,7 @@ class GruntCommand extends AbstractMoodleCommand
     {
         parent::configure();
 
-        $tasks = ['amd', 'yui', 'gherkinlint', 'stylelint:css', 'stylelint:less', 'stylelint:scss'];
+        $tasks = ['amd', 'yui', 'gherkinlint', 'stylelint'];
 
         $this->setName('grunt')
             ->setDescription('Run Grunt task on a plugin')
@@ -169,7 +169,8 @@ class GruntCommand extends AbstractMoodleCommand
         if (is_file($this->plugin->directory . '/Gruntfile.js')) {
             $workingDirectory = $this->plugin->directory;
         }
-        $defaultTask = new GruntTaskModel($task, $workingDirectory);
+        $defaultTask          = new GruntTaskModel($task, $workingDirectory);
+        $defaultTaskPluginDir = new GruntTaskModel($task, $this->plugin->directory);
 
         switch ($task) {
             case 'amd':
@@ -193,12 +194,13 @@ class GruntCommand extends AbstractMoodleCommand
                 }
 
                 return new GruntTaskModel($task, $this->moodle->directory);
+            case 'stylelint':
+                // Let stylelint task logic to determine which type of linter to run.
+                return $this->plugin->hasFilesWithName('*.css') || $this->plugin->hasFilesWithName('*.scss') ? $defaultTaskPluginDir : null;
             case 'stylelint:css':
-                return $this->plugin->hasFilesWithName('*.css') ? $defaultTask : null;
-            case 'stylelint:less':
-                return $this->plugin->hasFilesWithName('*.less') ? $defaultTask : null;
+                return $this->plugin->hasFilesWithName('*.css') ? $defaultTaskPluginDir : null;
             case 'stylelint:scss':
-                return $this->plugin->hasFilesWithName('*.scss') ? $defaultTask : null;
+                return $this->plugin->hasFilesWithName('*.scss') ? $defaultTaskPluginDir : null;
             default:
                 return $defaultTask;
         }
