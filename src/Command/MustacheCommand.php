@@ -62,6 +62,13 @@ class MustacheCommand extends AbstractMoodleCommand
 
         $code = 0;
         foreach ($files as $file) {
+            if (str_contains($file, '/templates/mobileapp/')) {
+                // Skip app templates for now because they throw many warnings due to custom directives.
+                // To be improved in the future.
+                $this->outputSkip($output, 'Skipping mobile app template: ' . $file);
+                continue;
+            }
+
             $cmd = [
                 'env',
                 '-u',
@@ -73,7 +80,7 @@ class MustacheCommand extends AbstractMoodleCommand
                 $wrapper,
                 '--filename=' . $file,
                 '--validator=' . $jarTmpFile,
-                '--basename=' . $this->moodle->directory,
+                '--basename=' . $this->moodle->getPublicDirectory(),
             ];
             // _JAVA_OPTIONS is something Travis CI started to set in Trusty.  This breaks Mustache because
             // the output from vnu.jar needs to be captured and JSON decoded.  When _JAVA_OPTIONS is present,

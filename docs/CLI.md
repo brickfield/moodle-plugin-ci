@@ -347,6 +347,16 @@ Print contents of Behat failure HTML files
 * Is negatable: no
 * Default: `false`
 
+#### `--scss-deprecations`
+
+Enable SCSS deprecation checks
+
+* Accept value: no
+* Is value required: no
+* Is multiple: no
+* Is negatable: no
+* Default: `false`
+
 #### `--help|-h`
 
 Display help for the given command. When no command is given display help for the list command
@@ -887,7 +897,7 @@ Directory create for Moodle data files
 
 #### `--repo`
 
-Moodle repository to clone
+Moodle repository to clone, can be local path to repo
 
 * Accept value: yes
 * Is value required: yes

@@ -8,6 +8,45 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 The format of this change log follows the advice given at [Keep a CHANGELOG](https://keepachangelog.com).
 
+## [Unreleased]
+
+## [4.5.10] - 2026-02-09
+### Changed
+- Updated project dependencies to current [moodle-cs v3.7.0](https://github.com/moodlehq/moodle-cs) and [moodle-local_ci v1.1.4](https://github.com/moodlehq/moodle-local_ci) releases. The project now targets the current Moodle version.
+- ACTION SUGGESTED: bump workflows to postgres 16, which is a requirement for Moodle 5.2
+- Linting for mobile app templates is disabled to avoid throwing warnings with Angular, Ionic or Moodle app custom directives.
+- ACTION SUGGESTED: move mobile app templates to a `templates/mobileapp/` folder.
+
+### Added
+- Support Moodle cloning from local repo. Installation command `--repo` params support `file://` and `./moodle` making it similar to `git clone` behaviour.
+
+## [4.5.9] - 2025-10-10
+### Changed
+- Updated project dependencies to current [moodle-cs v3.6.0](https://github.com/moodlehq/moodle-cs) and [moodle-local_ci v1.1.3](https://github.com/moodlehq/moodle-local_ci) releases.
+- Bump workflows to Postgres 15, which is a requirement for Moodle 5.1
+
+### Fixed
+- Fix json file missing error in moodle-plugin-ci.phar
+
+## [4.5.8] - 2025-07-08
+### Changed
+- Bump default Selenium version to 4.
+
+### Fixed
+- Add support for public directory structure in 5.1 (MDL-83424).
+
+### Deprecated
+- Using Travis CI has been deprecated in 4.5.8 and will be removed in 5.0.0. This includes removing configuration template and relevant documentation.
+- ACTION SUGGESTED: Consider using GitHub Actions for plugin CI testing.
+
+## [4.5.7] - 2025-03-26
+### Changed
+- Allow to run with PHP 8.4 (supported in Moodle 5.0)
+- Updated travis.yml and the recommendations to run travis with Postgres 14
+
+### Added
+- New `--scss-deprecations` option added to the `behat` command
+
 ## [4.5.6] - 2025-01-31
 ### Fixed
 - Removed the PHPUnit --verbose option to comply with Moodle 5.0
@@ -751,7 +790,11 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - `moodle-plugin-ci shifter` command.  Run YUI Shifter on plugin YUI modules.
 - `moodle-plugin-ci csslint` command.  Lints the CSS files in the plugin.
 
-[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.6...main
+[Unreleased]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.10...main
+[4.5.10]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.9...4.5.10
+[4.5.9]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.8...4.5.9
+[4.5.8]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.7...4.5.8
+[4.5.7]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.6...4.5.7
 [4.5.6]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.5...4.5.6
 [4.5.5]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.4...4.5.5
 [4.5.4]: https://github.com/moodlehq/moodle-plugin-ci/compare/4.5.3...4.5.4

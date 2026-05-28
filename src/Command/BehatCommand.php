@@ -48,6 +48,7 @@ class BehatCommand extends AbstractMoodleCommand
             ->addOption('auto-rerun', null, InputOption::VALUE_REQUIRED, 'Number of times to rerun failures', 2)
             ->addOption('selenium', null, InputOption::VALUE_REQUIRED, 'Selenium Docker image')
             ->addOption('dump', null, InputOption::VALUE_NONE, 'Print contents of Behat failure HTML files')
+            ->addOption('scss-deprecations', null, InputOption::VALUE_NONE, 'Enable SCSS deprecation checks')
             ->setDescription('Run Behat on a plugin');
     }
 
@@ -72,6 +73,16 @@ class BehatCommand extends AbstractMoodleCommand
 
         $servers && $this->startServerProcesses($input);
 
+        if ($input->getOption('scss-deprecations')) {
+            $enableprocess = new Process([
+                'php', 'admin/tool/behat/cli/util_single_run.php',
+                '--enable',
+                '--add-core-features-to-theme',
+                '--scss-deprecations',
+            ], $this->moodle->getPublicDirectory(), null, null, null);
+            $this->execute->passThroughProcess($enableprocess);
+        }
+
         $cmd = [
             'php', 'admin/tool/behat/cli/run.php',
             '--profile=' . $input->getOption('profile'),
@@ -91,7 +102,7 @@ class BehatCommand extends AbstractMoodleCommand
             $cmd[] = '--colors';
         }
 
-        $process = $this->execute->passThroughProcess(new Process($cmd, $this->moodle->directory, null, null, null));
+        $process = $this->execute->passThroughProcess(new Process($cmd, $this->moodle->getPublicDirectory(), null, null, null));
 
         $servers && $this->stopServerProcesses();
 
@@ -156,7 +167,10 @@ class BehatCommand extends AbstractMoodleCommand
             'php',
             '-S',
             $phpWebserverHost,
+            '-t',
+            $this->moodle->getPublicDirectory(),
         ];
+
         $web = new Process($cmd, $this->moodle->directory);
         $web->setTimeout(0);
         $web->disableOutput();
@@ -212,13 +226,13 @@ class BehatCommand extends AbstractMoodleCommand
         }
 
         if ($profile === 'chrome') {
-            return getenv('MOODLE_APP') ? 'selenium/standalone-chrome:120.0' : 'selenium/standalone-chrome:3';
+            return 'selenium/standalone-chrome:4';
         }
 
         if ($this->usesLegacyPhpWebdriver()) {
             return 'selenium/standalone-firefox:2.53.1';
         }
 
-        return 'selenium/standalone-firefox:3';
+        return 'selenium/standalone-firefox:4';
     }
 }
